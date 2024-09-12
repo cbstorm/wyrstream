@@ -1,0 +1,31 @@
+services:
+  nats_core:
+    container_name: nats_core
+    image: "bitnami/nats:latest"
+    ports:
+      - 4222:4222
+    environment:
+      - NATS_ENABLE_AUTH=yes
+      - NATS_USERNAME=uvbcEWCVNTNHv5Hylk7MBYmRsnHKT5VixVOBJo
+      - NATS_PASSWORD=gxvaXyuHXuktyGrMEzWtXQmaFw3szaasGnuQZ35
+    volumes:
+      - ./.opt/nats_core/logs:/etc/logs
+      - ./.opt/nats_core/data:/bitnami/nats/data
+    restart: unless-stopped
+    networks:
+      - wyrstream
+  redis:
+    container_name: redis
+    image: bitnami/redis:latest
+    volumes:
+      - ./.opt/redis_data:/bitnami/redis/data
+    environment:
+      - REDIS_PASSWORD=o0xN5KFkYKOiyhQkPZ384oVhCGDkfmr63a3zZdKX
+    ports:
+      - 6379:6379
+    restart: unless-stopped
+    networks:
+      - wyrstream
+networks:
+  wyrstream:
+    driver: bridge
