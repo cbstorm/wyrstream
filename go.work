@@ -4,4 +4,5 @@ use (
 	./auth_service
 	./control_service
 	./lib
+	./stream_service
 )

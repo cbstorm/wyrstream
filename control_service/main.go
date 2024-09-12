@@ -1,6 +1,9 @@
 package main
 
 import (
+	"os"
+	"os/signal"
+
 	"github.com/cbstorm/wyrstream/lib/configs"
 	"github.com/cbstorm/wyrstream/lib/database"
 	"github.com/cbstorm/wyrstream/lib/logger"
@@ -14,5 +17,10 @@ func main() {
 	if err := database.GetDatabase().Connect(); err != nil {
 		logg.Fatal("Could not connect to database %v", err)
 	}
-	logg.Info("[control_service] started")
+	logg.Info("Control service started.")
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+	logg.Info("Control service shutting down...")
+	os.Exit(0)
 }
