@@ -23,13 +23,11 @@ func GetConfig() *Config {
 }
 
 type Config struct {
-	logger          *logger.Logger
-	ADDR            string
-	MONGODB_DB_NAME string
+	logger *logger.Logger
+	ADDR   string
 }
 
 func (c *Config) Load() error {
 	c.ADDR = os.Getenv("ADDR")
-	c.MONGODB_DB_NAME = os.Getenv("MONGODB_DB_NAME")
 	return nil
 }
