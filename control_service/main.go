@@ -7,6 +7,7 @@ import (
 	"github.com/cbstorm/wyrstream/lib/configs"
 	"github.com/cbstorm/wyrstream/lib/database"
 	"github.com/cbstorm/wyrstream/lib/logger"
+	natsservice "github.com/cbstorm/wyrstream/lib/nats_service"
 )
 
 func main() {
@@ -16,6 +17,9 @@ func main() {
 	}
 	if err := database.GetDatabase().Connect(); err != nil {
 		logg.Fatal("Could not connect to database %v", err)
+	}
+	if err := natsservice.GetNATSService().Connect(); err != nil {
+		logg.Fatal("Could not connect to NATS server with err: %v", err)
 	}
 	logg.Info("Control service started.")
 	quit := make(chan os.Signal, 1)

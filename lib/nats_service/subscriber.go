@@ -81,7 +81,8 @@ func (s *Subscriber) SetHandler(handler func(*nats.Msg) ([]byte, error)) *Subscr
 }
 
 func (s *Subscriber) Start(nc *nats.Conn, queue_group string) error {
-	sub_ch := make(chan *nats.Msg, s.concurrency)
+	sub_ch := make(chan *nats.Msg, 64)
+	limit_ch := make(chan bool, s.concurrency)
 	sub, err := nc.ChanQueueSubscribe(s.subject, queue_group, sub_ch)
 
 	s.subscription = sub
@@ -93,26 +94,27 @@ func (s *Subscriber) Start(nc *nats.Conn, queue_group string) error {
 		s.logger.Error("Could not start subscibe with error: %v", err)
 		return err
 	}
+	for v := range sub_ch {
+		go func(msg *nats.Msg) {
+			limit_ch <- true
+			defer func() {
+				<-limit_ch
+			}()
+			res_data, err := s.handler(msg)
+			res := &ResponseMsg{Data: res_data, Error: err}
+			r, err := res.ToBytes()
+			if err != nil {
+				s.logger.Error("%v", err)
+				return
+			}
+			if err := msg.Respond(r); err != nil {
+				s.logger.Error("%v", err)
+				return
+			}
+		}(v)
+	}
 	s.status = START
 	s.logger.Info("Started")
-	go func() {
-		for v := range sub_ch {
-			go func(msg *nats.Msg) {
-				res_data, err := s.handler(msg)
-				res := &ResponseMsg{Data: res_data, Error: err}
-				r, err := res.ToBytes()
-				if err != nil {
-					s.logger.Error("%v", err)
-					return
-				}
-				if err := msg.Respond(r); err != nil {
-					s.logger.Error("%v", err)
-					return
-				}
-			}(v)
-
-		}
-	}()
 	return nil
 }
 

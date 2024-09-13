@@ -82,3 +82,30 @@ func (ns *NATS_Service) StartAllSubscriber() error {
 	}
 	return nil
 }
+
+type RequestOpts struct {
+	timeout time.Duration
+}
+
+type RequestOptFunc func(*RequestOpts)
+
+func WithTimeout(t time.Duration) RequestOptFunc {
+	return func(ro *RequestOpts) {
+		ro.timeout = t
+	}
+}
+
+func (ns *NATS_Service) Request(subj string, data []byte, opts ...RequestOptFunc) ([]byte, error) {
+	o := &RequestOpts{}
+	for _, v := range opts {
+		v(o)
+	}
+	if o.timeout == 0 {
+		o.timeout = time.Second * 20
+	}
+	msg, err := ns.nats_client.Request(subj, data, o.timeout)
+	if err != nil {
+		return nil, err
+	}
+	return msg.Data, nil
+}
