@@ -7,7 +7,7 @@ type UserEntity struct {
 	Password   string `bson:"password" json:"-"`
 }
 
-func NewUser() *UserEntity {
+func NewUserEntity() *UserEntity {
 	user := &UserEntity{}
 	user.NewId()
 	user.SetTime()

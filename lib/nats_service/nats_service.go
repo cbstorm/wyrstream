@@ -1,4 +1,4 @@
-package natsservice
+package nats_service
 
 import (
 	"fmt"
@@ -18,6 +18,7 @@ func GetNATSService() *NATS_Service {
 		instance_sync.Do(func() {
 			instance = &NATS_Service{
 				logger: logger.NewLogger("NATS_SERVICE"),
+				config: configs.GetConfig(),
 			}
 		})
 	}
@@ -30,12 +31,12 @@ type NATS_Service struct {
 	queue_group string
 	subscribers map[string]*Subscriber
 	mu          sync.RWMutex
+	config      *configs.Config
 }
 
 func (ns *NATS_Service) Connect() error {
-	cfg := configs.GetConfig()
-	ns.queue_group = cfg.NATS_CORE_QUEUE_GROUP
-	nc_connection_string := fmt.Sprintf("nats://%s:%s@%s:%d", cfg.NATS_CORE_USERNAME, cfg.NATS_CORE_PASSWORD, cfg.NATS_CORE_HOST, cfg.NATS_CORE_PORT)
+	ns.queue_group = ns.config.NATS_CORE_QUEUE_GROUP
+	nc_connection_string := fmt.Sprintf("nats://%s:%s@%s:%d", ns.config.NATS_CORE_USERNAME, ns.config.NATS_CORE_PASSWORD, ns.config.NATS_CORE_HOST, ns.config.NATS_CORE_PORT)
 	nc, err := nats.Connect(nc_connection_string,
 		nats.RetryOnFailedConnect(true),
 		nats.MaxReconnects(5),
@@ -48,7 +49,7 @@ func (ns *NATS_Service) Connect() error {
 	if err = ns.verifyConnection(); err != nil {
 		return err
 	}
-	ns.logger.Info("Connect to NATS server at %s:%d successfully!", cfg.NATS_CORE_HOST, cfg.NATS_CORE_PORT)
+	ns.logger.Info("Connect to NATS server at %s:%d successfully!", ns.config.NATS_CORE_HOST, ns.config.NATS_CORE_PORT)
 	return nil
 }
 

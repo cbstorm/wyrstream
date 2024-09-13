@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/cbstorm/wyrstream/lib/entities"
 	"github.com/cbstorm/wyrstream/lib/exceptions"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -151,12 +152,12 @@ func (fetchArgs *FetchArgs) GetLng() float64 {
 	return fetchArgs.Location[1]
 }
 
-type FetchOutput[T any] struct {
+type FetchOutput[T entities.IEntity] struct {
 	Total  int64 `json:"total"`
-	Result []*T  `json:"result"`
+	Result []T   `json:"result"`
 }
 
-func NewFetchOutput[T any](total int64, result []*T) *FetchOutput[T] {
+func NewFetchOutput[T entities.IEntity](total int64, result []T) *FetchOutput[T] {
 	return &FetchOutput[T]{
 		Total:  total,
 		Result: result,
@@ -181,7 +182,7 @@ func NewGetOneInput() *GetOneInput {
 func (d *GetOneInput) SetId(id string) (*GetOneInput, error) {
 	objId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return nil, exceptions.Err_BAD_REQUEST().SetMessage(fmt.Sprintf("id invalid with %s", id))
+		return nil, exceptions.Err_BAD_REQUEST().SetMessage(fmt.Sprintf("id invalid: %s", id))
 	}
 	return &GetOneInput{Id: objId}, nil
 }
@@ -193,7 +194,7 @@ type DeleteOneInput struct {
 func (i *DeleteOneInput) SetId(id string) (*DeleteOneInput, error) {
 	objId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return nil, exceptions.Err_BAD_REQUEST().SetMessage(fmt.Sprintf("id invalid with %s", id))
+		return nil, exceptions.Err_BAD_REQUEST().SetMessage(fmt.Sprintf("id invalid: %s", id))
 	}
 	i.Id = objId
 	return i, nil

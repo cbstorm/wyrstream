@@ -1,4 +1,4 @@
-package natsservice
+package nats_service
 
 import (
 	"encoding/json"
@@ -125,7 +125,7 @@ func (s *Subscriber) Stop() error {
 			return err
 		}
 		close(s.subscription_channel)
+		s.logger.Info("Unsubscribed")
 	}
-	s.logger.Info("Unsubscribed")
 	return nil
 }

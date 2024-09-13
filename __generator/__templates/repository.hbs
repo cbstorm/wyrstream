@@ -1,0 +1,30 @@
+package repositories
+
+import (
+	"sync"
+
+	"github.com/cbstorm/wyrstream/lib/database"
+	"github.com/cbstorm/wyrstream/lib/entities"
+)
+
+var {{name}}_repository *{{Case name}}Repository
+var {{name}}_repository_sync sync.Once
+
+func Get{{Case name}}Repository() *{{Case name}}Repository {
+	if {{name}}_repository == nil {
+		{{name}}_repository_sync.Do(func() {
+			db := database.GetDatabase()
+			{{name}}_collection := db.DB().Collection("{{Plural name}}")
+			{{name}}_repository = &{{Case name}}Repository{
+				CRUDRepository[*entities.{{Case name}}Entity]{
+					collection: {{name}}_collection,
+				},
+			}
+		})
+	}
+	return {{name}}_repository
+}
+
+type {{Case name}}Repository struct {
+	CRUDRepository[*entities.{{Case name}}Entity]
+}

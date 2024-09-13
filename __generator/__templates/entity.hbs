@@ -1,0 +1,12 @@
+package entities
+
+type {{Case name}}Entity struct {
+	BaseEntity `bson:",inline"`
+}
+
+func New{{Case name}}Entity() *{{Case name}}Entity {
+	{{name}} := &{{Case name}}Entity{}
+	{{name}}.NewId()
+	{{name}}.SetTime()
+	return {{name}}
+}

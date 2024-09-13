@@ -21,6 +21,7 @@ type Database struct {
 	client *mongo.Client
 	db     *mongo.Database
 	logger *logger.Logger
+	config *configs.Config
 }
 
 func GetDatabase() *Database {
@@ -28,6 +29,7 @@ func GetDatabase() *Database {
 		instance_sync.Do(func() {
 			instance = &Database{
 				logger: logger.NewLogger("DATABASE"),
+				config: configs.GetConfig(),
 			}
 		})
 	}
@@ -43,8 +45,7 @@ func (d *Database) DB() *mongo.Database {
 }
 
 func (d *Database) Connect() error {
-	cfg := configs.GetConfig()
-	clientOptions := options.Client().ApplyURI(cfg.MONGODB_URL)
+	clientOptions := options.Client().ApplyURI(d.config.MONGODB_URL)
 	clientOptions.SetMaxPoolSize(30)
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
@@ -55,7 +56,7 @@ func (d *Database) Connect() error {
 		return err
 	}
 	d.client = client
-	d.db = client.Database(cfg.MONGODB_DB_NAME, options.Database().SetWriteConcern(writeconcern.Majority()), options.Database().SetReadPreference(readpref.Secondary()))
+	d.db = client.Database(d.config.MONGODB_DB_NAME, options.Database().SetWriteConcern(writeconcern.Majority()), options.Database().SetReadPreference(readpref.Secondary()))
 	if err := d.db.Client().Ping(context.Background(), options.Client().ReadPreference); err != nil {
 		return err
 	}

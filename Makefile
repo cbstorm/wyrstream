@@ -1,8 +1,7 @@
-ifneq (,$(wildcard .env))
+ifneq (,$(wildcard ./.env))
     include .env
     export
 endif
-
 CC = go
 CONTROL_SERVICE_DIR = ./control_service
 STREAM_SERVICE_DIR = ./stream_service
@@ -17,11 +16,11 @@ all: control-svc stream-svc auth-svc
 
 build: mkdist build-control-svc build-stream-svc build-auth-svc
 build-control-svc:
-	$(CC) build -o $(CONTROL_SVC) $(CONTROL_SERVICE_DIR)/main.go
+	$(CC) build -o $(CONTROL_SVC) $(CONTROL_SERVICE_DIR)
 build-stream-svc:
-	$(CC) build -o $(STREAM_SVC) $(STREAM_SERVICE_DIR)/main.go
+	$(CC) build -o $(STREAM_SVC) $(STREAM_SERVICE_DIR)
 build-auth-svc:
-	$(CC) build -o $(AUTH_SVC) $(AUTH_SERVICE_DIR)/main.go $(AUTH_SERVICE_DIR)/subscribers.go
+	$(CC) build -o $(AUTH_SVC) $(AUTH_SERVICE_DIR)
 control-svc:
 	$(CONTROL_SVC)
 stream-svc:
@@ -41,6 +40,21 @@ work:
 docker-dev:
 	docker compose -f docker-compose.dev.yml up -d
 mkenv:
-	@echo "MONGODB_URL=\nMONGODB_DB_NAME=\nADDR=\nNATS_CORE_USERNAME=\nNATS_CORE_PASSWORD=\nNATS_CORE_HOST=\nNATS_CORE_PORT=\nNATS_CORE_QUEUE_GROUP=\n" > .env
+	@echo "MONGODB_URL=\n \
+	MONGODB_DB_NAME=\n \
+	ADDR=\n \
+	NATS_CORE_USERNAME=\n \
+	NATS_CORE_PASSWORD=\n \
+	NATS_CORE_HOST=\n \
+	NATS_CORE_PORT=\n \
+	NATS_CORE_QUEUE_GROUP=\n \
+	HTTP_HOST=\n \
+	HTTP_PORT=\n" \
+	REDIS_USERNAME=\n \
+	REDIS_PASSWORD=\n \
+	REDIS_HOST=\n \
+	REDIS_PORT=\n \
+	REDIS_KEY_PREFIX=\n \
+	> .env
 setup: mkenv
 

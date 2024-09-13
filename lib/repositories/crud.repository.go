@@ -6,6 +6,7 @@ import (
 
 	"github.com/cbstorm/wyrstream/lib/database"
 	"github.com/cbstorm/wyrstream/lib/dtos"
+	"github.com/cbstorm/wyrstream/lib/entities"
 	"github.com/cbstorm/wyrstream/lib/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -51,18 +52,18 @@ func WithSort(sort map[string]interface{}) CURDOptionFunc {
 	}
 }
 
-type CRUDRepository[T any] struct {
+type CRUDRepository[T entities.IEntity] struct {
 	collection *mongo.Collection
 }
 
-func (r *CRUDRepository[T]) FindOneById(id primitive.ObjectID, out *T, opts ...CURDOptionFunc) (error, bool) {
+func (r *CRUDRepository[T]) FindOneById(id primitive.ObjectID, out T, opts ...CURDOptionFunc) (error, bool) {
 	return r.FindOne(map[string]interface{}{
 		"_id": id,
 	}, out, opts...)
 
 }
 
-func (r *CRUDRepository[T]) FindOne(filter map[string]interface{}, out *T, opts ...CURDOptionFunc) (error, bool) {
+func (r *CRUDRepository[T]) FindOne(filter map[string]interface{}, out T, opts ...CURDOptionFunc) (error, bool) {
 	ctx := context.Background()
 	find_one_opts := options.FindOne()
 	o := _NewCRUDOption()
@@ -84,7 +85,7 @@ func (r *CRUDRepository[T]) FindOne(filter map[string]interface{}, out *T, opts 
 	return err, false
 }
 
-func (r *CRUDRepository[T]) Find(filter map[string]interface{}, results *[]*T, opts ...CURDOptionFunc) error {
+func (r *CRUDRepository[T]) Find(filter map[string]interface{}, results *[]T, opts ...CURDOptionFunc) error {
 	ctx := context.Background()
 	find_opts := options.Find()
 	o := _NewCRUDOption()
@@ -104,7 +105,7 @@ func (r *CRUDRepository[T]) Find(filter map[string]interface{}, results *[]*T, o
 	defer cursor.Close(ctx)
 	return cursor.All(ctx, results)
 }
-func (r *CRUDRepository[T]) FindManyByIds(ids []primitive.ObjectID, results *[]*T, opts ...CURDOptionFunc) error {
+func (r *CRUDRepository[T]) FindManyByIds(ids []primitive.ObjectID, results *[]T, opts ...CURDOptionFunc) error {
 	filter := map[string]interface{}{
 		"_id": map[string]interface{}{
 			"$in": ids,
@@ -117,7 +118,7 @@ func (r *CRUDRepository[T]) FindManyByIds(ids []primitive.ObjectID, results *[]*
 	return nil
 }
 
-func (r *CRUDRepository[T]) InsertOne(doc *T, opts ...CURDOptionFunc) error {
+func (r *CRUDRepository[T]) InsertOne(doc T, opts ...CURDOptionFunc) error {
 	ctx := context.Background()
 	o := _NewCRUDOption()
 	for _, v := range opts {
@@ -133,7 +134,7 @@ func (r *CRUDRepository[T]) InsertOne(doc *T, opts ...CURDOptionFunc) error {
 	return nil
 }
 
-func (r *CRUDRepository[T]) InsertMany(docs []*T, opts ...CURDOptionFunc) ([]interface{}, error) {
+func (r *CRUDRepository[T]) InsertMany(docs []T, opts ...CURDOptionFunc) ([]interface{}, error) {
 	ctx := context.Background()
 	o := _NewCRUDOption()
 	for _, v := range opts {
@@ -215,7 +216,7 @@ func (r *CRUDRepository[T]) Upsert(filter map[string]interface{}, update interfa
 	return nil
 }
 
-func (r *CRUDRepository[T]) Increase(filter map[string]interface{}, update interface{}, out *T, opts ...CURDOptionFunc) error {
+func (r *CRUDRepository[T]) Increase(filter map[string]interface{}, update interface{}, out T, opts ...CURDOptionFunc) error {
 	ctx := context.Background()
 	o := _NewCRUDOption()
 	for _, v := range opts {
@@ -265,7 +266,7 @@ func (r *CRUDRepository[T]) BulkUpdate(records []*BulkUpdateRecord, opts ...CURD
 	return err
 }
 
-func (r *CRUDRepository[T]) DeleteOne(filter map[string]interface{}, out *T, opts ...CURDOptionFunc) (error, bool) {
+func (r *CRUDRepository[T]) DeleteOne(filter map[string]interface{}, out T, opts ...CURDOptionFunc) (error, bool) {
 	ctx := context.Background()
 	o := _NewCRUDOption()
 	for _, v := range opts {
@@ -289,7 +290,7 @@ func (r *CRUDRepository[T]) DeleteOne(filter map[string]interface{}, out *T, opt
 	return nil, false
 }
 
-func (r *CRUDRepository[T]) DeleteOneById(id primitive.ObjectID, out *T, opts ...CURDOptionFunc) (error, bool) {
+func (r *CRUDRepository[T]) DeleteOneById(id primitive.ObjectID, out T, opts ...CURDOptionFunc) (error, bool) {
 	err, isNotFound := r.DeleteOne(map[string]interface{}{
 		"_id": id,
 	}, out, opts...)
@@ -327,7 +328,7 @@ func (r *CRUDRepository[T]) Count(filter map[string]interface{}, opts ...CURDOpt
 	return r.collection.CountDocuments(ctx, bson.M(filter))
 }
 
-func (r *CRUDRepository[T]) Fetch(fetchArgs *dtos.FetchArgs, out *[]*T, opts ...CURDOptionFunc) (*dtos.FetchOutput[T], error) {
+func (r *CRUDRepository[T]) Fetch(fetchArgs *dtos.FetchArgs, out *[]T, opts ...CURDOptionFunc) (*dtos.FetchOutput[T], error) {
 	ctx := context.Background()
 	o := _NewCRUDOption()
 	for _, v := range opts {

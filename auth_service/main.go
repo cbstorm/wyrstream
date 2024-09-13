@@ -6,7 +6,7 @@ import (
 
 	"github.com/cbstorm/wyrstream/lib/configs"
 	"github.com/cbstorm/wyrstream/lib/logger"
-	natsservice "github.com/cbstorm/wyrstream/lib/nats_service"
+	nats_service "github.com/cbstorm/wyrstream/lib/nats_service"
 )
 
 func main() {
@@ -14,10 +14,10 @@ func main() {
 	if err := configs.GetConfig().Load(); err != nil {
 		logg.Fatal("Could not load configuration with error:%v ", err)
 	}
-	if err := natsservice.GetNATSService().Connect(); err != nil {
+	if err := nats_service.GetNATSService().Connect(); err != nil {
 		logg.Fatal("Could not connect to NATS server with error: %v", err)
 	}
-	if err := natsservice.GetNATSService().StartAllSubscriber(); err != nil {
+	if err := nats_service.GetNATSService().StartAllSubscriber(); err != nil {
 		logg.Fatal("Could not start subscribers with error: %v", err)
 	}
 	logg.Info("Auth service started.")
