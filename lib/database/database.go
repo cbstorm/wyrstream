@@ -15,7 +15,7 @@ import (
 )
 
 var instance *Database
-var database_sync sync.Once
+var instance_sync sync.Once
 
 type Database struct {
 	client *mongo.Client
@@ -25,7 +25,7 @@ type Database struct {
 
 func GetDatabase() *Database {
 	if instance == nil {
-		database_sync.Do(func() {
+		instance_sync.Do(func() {
 			instance = &Database{
 				logger: logger.NewLogger("DATABASE"),
 			}
