@@ -1,6 +1,7 @@
 package common
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
@@ -10,7 +11,6 @@ import (
 	"github.com/cbstorm/wyrstream/lib/helpers"
 	"github.com/cbstorm/wyrstream/lib/logger"
 	"github.com/cbstorm/wyrstream/lib/repositories"
-	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -29,6 +29,7 @@ type RequestContext struct {
 	is_auth         bool
 	payload         map[string]interface{}
 	timezone_offset int
+	http_ctx        context.Context
 }
 
 func NewRequestContext() *RequestContext {
@@ -176,6 +177,11 @@ func (ctx *RequestContext) SetPath(path string) *RequestContext {
 	return ctx
 }
 
+func (ctx *RequestContext) SetHttpContext(http_ctx context.Context) *RequestContext {
+	ctx.http_ctx = http_ctx
+	return ctx
+}
+
 func (ctx *RequestContext) GetLogger() *logger.Logger {
 	if ctx.logger == nil {
 		ctx.logger = logger.NewLogger(fmt.Sprintf("%s %s %s", ctx.ip, ctx.method, ctx.path))
@@ -183,7 +189,7 @@ func (ctx *RequestContext) GetLogger() *logger.Logger {
 	return ctx.logger
 }
 
-func GetRequestContext(c *fiber.Ctx) *RequestContext {
+func GetRequestContext(c IHttpContext) *RequestContext {
 	ctx := c.Locals(ReqContextKey{})
 	if ctx != nil {
 		return ctx.(*RequestContext)

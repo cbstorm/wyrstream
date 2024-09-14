@@ -67,14 +67,14 @@ func (ns *NATS_Service) GetNC() *nats.Conn {
 	return ns.nats_client
 }
 
-func (ns *NATS_Service) AddSubcriber(s *Subscriber) error {
+func (ns *NATS_Service) AddSubcriber(s *Subscriber) bool {
 	ns.mu.Lock()
 	defer ns.mu.Unlock()
 	if ns.subscribers == nil {
 		ns.subscribers = make(map[string]*Subscriber)
 	}
 	ns.subscribers[s.id] = s
-	return nil
+	return true
 }
 
 func (ns *NATS_Service) StartAllSubscriber() error {

@@ -9,12 +9,12 @@ import (
 	"github.com/nats-io/nats.go"
 )
 
-type ResponseMsg struct {
-	Data  []byte `json:"data"`
-	Error error  `json:"error"`
+type ResponseMessage struct {
+	Data  interface{} `json:"data"`
+	Error error       `json:"error"`
 }
 
-func (m *ResponseMsg) ToBytes() ([]byte, error) {
+func (m *ResponseMessage) ToBytes() ([]byte, error) {
 	return json.Marshal(m)
 }
 
@@ -43,14 +43,14 @@ const (
 type Subscriber struct {
 	id, subject          string
 	concurrency          uint32
-	handler              func(*nats.Msg) ([]byte, error)
+	handler              func(IMessage) (interface{}, error)
 	status               SubscriberStatus
 	logger               *logger.Logger
 	subscription         *nats.Subscription
 	subscription_channel chan *nats.Msg // Close when unsubscribe
 }
 
-func NewSubscriber(subj string, handler func(*nats.Msg) ([]byte, error), opts ...SubcriberOptFunc) *Subscriber {
+func NewSubscriber(subj string, handler func(IMessage) (interface{}, error), opts ...SubcriberOptFunc) *Subscriber {
 	op := &SubcriberOpts{}
 	for _, v := range opts {
 		v(op)
@@ -75,7 +75,7 @@ func (s *Subscriber) SetSubject(subj string) *Subscriber {
 	return s
 }
 
-func (s *Subscriber) SetHandler(handler func(*nats.Msg) ([]byte, error)) *Subscriber {
+func (s *Subscriber) SetHandler(handler func(IMessage) (interface{}, error)) *Subscriber {
 	s.handler = handler
 	return s
 }
@@ -100,8 +100,9 @@ func (s *Subscriber) Start(nc *nats.Conn, queue_group string) error {
 			defer func() {
 				<-limit_ch
 			}()
-			res_data, err := s.handler(msg)
-			res := &ResponseMsg{Data: res_data, Error: err}
+			m := &RequestMessage{data: msg.Data}
+			res_data, err := s.handler(m)
+			res := &ResponseMessage{Data: res_data, Error: err}
 			r, err := res.ToBytes()
 			if err != nil {
 				s.logger.Error("%v", err)

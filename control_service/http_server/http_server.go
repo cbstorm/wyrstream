@@ -1,4 +1,4 @@
-package httpserver
+package http_server
 
 import (
 	"errors"
@@ -17,7 +17,7 @@ import (
 var instance *HttpServer
 var instance_sync sync.Once
 
-func GetApp() *HttpServer {
+func GetHttpServer() *HttpServer {
 	if instance == nil {
 		instance_sync.Do(func() {
 			instance = &HttpServer{
@@ -25,14 +25,18 @@ func GetApp() *HttpServer {
 				config: configs.GetConfig(),
 			}
 		})
+
 	}
 	return instance
 }
 
 type HttpServer struct {
-	FiberApp *fiber.App
-	logger   *logger.Logger
-	config   *configs.Config
+	fiber_app *fiber.App
+	logger    *logger.Logger
+	config    *configs.Config
+	initiated bool
+	mu        sync.Mutex
+	routes    []*HTTPRoute
 }
 
 func (a *HttpServer) Init() *HttpServer {
@@ -58,14 +62,35 @@ func (a *HttpServer) Init() *HttpServer {
 	app.Use(compress.New(compress.Config{
 		Level: compress.LevelBestSpeed,
 	}))
-	a.FiberApp = app
+	a.fiber_app = app
 	return a
 }
 
-func (a *HttpServer) LoadRoutes() *HttpServer {
+func (a *HttpServer) AddRoutes() *HttpServer {
+	for _, route := range a.routes {
+		handlers := make([]func(*fiber.Ctx) error, len(route.Handlers))
+		for i, f := range route.Handlers {
+			handlers[i] = func(c *fiber.Ctx) error {
+				return f(c)
+			}
+		}
+		a.fiber_app.Add(string(route.Method), route.Endpoint, handlers...)
+	}
 	return a
+}
+
+func (a *HttpServer) FeedRoute(route *HTTPRoute) bool {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if !a.initiated {
+		a.Init()
+	}
+	if route.Enable {
+		a.routes = append(a.routes, route)
+	}
+	return route.Enable
 }
 
 func (a *HttpServer) Listen() error {
-	return a.FiberApp.Listen(fmt.Sprintf("%s:%d", a.config.HTTP_HOST, a.config.HTTP_PORT))
+	return a.fiber_app.Listen(fmt.Sprintf("%s:%d", a.config.HTTP_HOST, a.config.HTTP_PORT))
 }

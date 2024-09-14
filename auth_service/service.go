@@ -34,7 +34,7 @@ type AuthService struct {
 	user_repository *repositories.UserRepository
 }
 
-func (svc *AuthService) Login(input *dtos.LoginInput) (*dtos.LoginResponse, error) {
+func (svc *AuthService) UserLogin(input *dtos.UserLoginInput) (*dtos.UserLoginResponse, error) {
 	if !utils.IsValidEmailAddress(input.Email) {
 		return nil, exceptions.Err_EMAIL_INVALID().SetMessage("Your email address invalid")
 	}
@@ -58,18 +58,19 @@ func (svc *AuthService) Login(input *dtos.LoginInput) (*dtos.LoginResponse, erro
 	if err != nil {
 		return nil, err
 	}
-	out := &dtos.LoginResponse{}
-	out.AccessToken = access_token
-	out.RefreshToken = refresh_token
-	out.Id = user.Id
-	out.Name = user.Name
-	out.Email = user.Email
-	out.CreatedAt = user.CreatedAt
-	out.UpdatedAt = user.UpdatedAt
+	out := &dtos.UserLoginResponse{
+		Id:           user.Id,
+		Name:         user.Name,
+		Email:        user.Email,
+		CreatedAt:    user.CreatedAt,
+		UpdatedAt:    user.UpdatedAt,
+		AccessToken:  access_token,
+		RefreshToken: refresh_token,
+	}
 	return out, nil
 }
 
-func (svc *AuthService) CreateAccount(input *dtos.CreateAccountInput) (*dtos.CreateAccountReponse, error) {
+func (svc *AuthService) UserCreateAccount(input *dtos.UserCreateAccountInput) (*dtos.UserCreateAccountReponse, error) {
 	existed_user := entities.NewUserEntity()
 	err, is_not_found := svc.user_repository.FindOneByEmail(input.Email, existed_user)
 	if err != nil {
@@ -89,16 +90,18 @@ func (svc *AuthService) CreateAccount(input *dtos.CreateAccountInput) (*dtos.Cre
 	if err := svc.user_repository.InsertOne(user); err != nil {
 		return nil, err
 	}
-	out := &dtos.CreateAccountReponse{}
-	out.Id = user.Id
-	out.Name = user.Name
-	out.Email = user.Email
-	out.CreatedAt = user.CreatedAt
-	out.UpdatedAt = user.UpdatedAt
+	out := &dtos.UserCreateAccountReponse{
+		Id:        user.Id,
+		Name:      user.Name,
+		Email:     user.Email,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+	}
+
 	return out, nil
 }
 
-func (svc *AuthService) GetMe(reqCtx *common.RequestContext) (*dtos.UserReponse, error) {
+func (svc *AuthService) UserGetMe(reqCtx *common.RequestContext) (*dtos.UserReponse, error) {
 	user := entities.NewUserEntity()
 	err, is_not_found := svc.user_repository.FindOneById(reqCtx.GetObjId(), user)
 	if err != nil {
@@ -117,7 +120,7 @@ func (svc *AuthService) GetMe(reqCtx *common.RequestContext) (*dtos.UserReponse,
 	return out, nil
 }
 
-func (svc *AuthService) RefreshToken(input *dtos.RefreshTokenInput, reqCtx *common.RequestContext) (*dtos.RefreshTokenOutput, error) {
+func (svc *AuthService) UserRefreshToken(input *dtos.UserRefreshTokenInput, reqCtx *common.RequestContext) (*dtos.UserRefreshTokenOutput, error) {
 	payload, err := helpers.VerifyAuthToken(input.RefreshToken)
 	if err != nil {
 		return nil, err
@@ -147,7 +150,7 @@ func (svc *AuthService) RefreshToken(input *dtos.RefreshTokenInput, reqCtx *comm
 	if err != nil {
 		return nil, err
 	}
-	output := &dtos.RefreshTokenOutput{
+	output := &dtos.UserRefreshTokenOutput{
 		NewToken:        token,
 		NewRefreshToken: refresh_token,
 	}

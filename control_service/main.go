@@ -1,9 +1,8 @@
 package main
 
 import (
-	"os"
-	"os/signal"
-
+	local_configs "github.com/cbstorm/wyrstream/control_service/configs"
+	"github.com/cbstorm/wyrstream/control_service/http_server"
 	"github.com/cbstorm/wyrstream/lib/configs"
 	"github.com/cbstorm/wyrstream/lib/database"
 	"github.com/cbstorm/wyrstream/lib/logger"
@@ -12,8 +11,11 @@ import (
 
 func main() {
 	logg := logger.NewLogger("CONTROL_SVC")
+	if err := local_configs.GetConfig().Load(); err != nil {
+		logg.Fatal("Could not load local configs with err: %v", err)
+	}
 	if err := configs.GetConfig().Load(); err != nil {
-		logg.Fatal("Could not load config with err: %v", err)
+		logg.Fatal("Could not load configs with err: %v", err)
 	}
 	if err := database.GetDatabase().Connect(); err != nil {
 		logg.Fatal("Could not connect to database %v", err)
@@ -21,10 +23,7 @@ func main() {
 	if err := natsservice.GetNATSService().Connect(); err != nil {
 		logg.Fatal("Could not connect to NATS server with err: %v", err)
 	}
-	logg.Info("Control service started.")
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt)
-	<-quit
-	logg.Info("Control service shutting down...")
-	os.Exit(0)
+	if err := http_server.GetHttpServer().AddRoutes().Listen(); err != nil {
+		logg.Fatal("Could not start http server with err: %v", err)
+	}
 }

@@ -30,6 +30,7 @@ type Config struct {
 }
 
 func (c *Config) Load() error {
+	//Http server
 	c.HTTP_HOST = os.Getenv("HTTP_HOST")
 	port, err := strconv.ParseUint(os.Getenv("HTTP_PORT"), 10, 16)
 	if err != nil {

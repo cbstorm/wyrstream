@@ -1,15 +1,14 @@
 package main
 
 import (
-	"log"
-	"time"
-
+	"github.com/cbstorm/wyrstream/lib/dtos"
 	nats_service "github.com/cbstorm/wyrstream/lib/nats_service"
-	"github.com/nats-io/nats.go"
 )
 
-var _ = nats_service.GetNATSService().AddSubcriber(nats_service.NewSubscriber("test_1", func(m *nats.Msg) ([]byte, error) {
-	log.Println(string(m.Data))
-	time.Sleep(5 * time.Second)
-	return []byte("response_1"), nil
+var _ = nats_service.GetNATSService().AddSubcriber(nats_service.NewSubscriber("auth.login", func(m nats_service.IMessage) (interface{}, error) {
+	user_login_input := &dtos.UserLoginInput{}
+	if err := m.JSONParse(user_login_input); err != nil {
+		return nil, err
+	}
+	return GetAuthService().UserLogin(user_login_input)
 }))

@@ -6,12 +6,12 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type LoginInput struct {
+type UserLoginInput struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
-type LoginResponse struct {
+type UserLoginResponse struct {
 	Id           primitive.ObjectID `json:"_id"`
 	Name         string             `json:"name"`
 	Email        string             `json:"email"`
@@ -21,13 +21,13 @@ type LoginResponse struct {
 	RefreshToken string             `json:"refresh_token"`
 }
 
-type CreateAccountInput struct {
+type UserCreateAccountInput struct {
 	Name     string `json:"name"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
-type CreateAccountReponse struct {
+type UserCreateAccountReponse struct {
 	Id        primitive.ObjectID `json:"_id"`
 	Name      string             `json:"name"`
 	Email     string             `json:"email"`
@@ -35,12 +35,12 @@ type CreateAccountReponse struct {
 	UpdatedAt time.Time          `json:"updatedAt"`
 }
 
-type RefreshTokenInput struct {
+type UserRefreshTokenInput struct {
 	Token        string `json:"token,omitempty"`
 	RefreshToken string `json:"refresh_token,omitempty"`
 }
 
-type RefreshTokenOutput struct {
+type UserRefreshTokenOutput struct {
 	NewToken        string `json:"new_token,omitempty"`
 	NewRefreshToken string `json:"new_refresh_token,omitempty"`
 }
