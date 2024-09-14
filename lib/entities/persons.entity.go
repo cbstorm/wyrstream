@@ -19,8 +19,7 @@ type PersonEntity struct {
 
 func NewPersonEntity() *PersonEntity {
 	person := &PersonEntity{}
-	person.NewId()
-	person.SetTime()
+	person.New()
 	return person
 }
 

@@ -33,7 +33,6 @@ type HttpServer struct {
 	FiberApp *fiber.App
 	logger   *logger.Logger
 	config   *configs.Config
-	// routes
 }
 
 func (a *HttpServer) Init() *HttpServer {

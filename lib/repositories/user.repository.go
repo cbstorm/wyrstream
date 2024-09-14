@@ -28,3 +28,9 @@ func GetUserRepository() *UserRepository {
 type UserRepository struct {
 	CRUDRepository[*entities.UserEntity]
 }
+
+func (r *UserRepository) FindOneByEmail(email string, out *entities.UserEntity, opts ...CURDOptionFunc) (error, bool) {
+	return r.FindOne(map[string]interface{}{
+		"email": email,
+	}, out, opts...)
+}

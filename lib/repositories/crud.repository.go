@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/cbstorm/wyrstream/lib/database"
-	"github.com/cbstorm/wyrstream/lib/dtos"
 	"github.com/cbstorm/wyrstream/lib/entities"
 	"github.com/cbstorm/wyrstream/lib/utils"
 	"go.mongodb.org/mongo-driver/bson"
@@ -328,7 +327,31 @@ func (r *CRUDRepository[T]) Count(filter map[string]interface{}, opts ...CURDOpt
 	return r.collection.CountDocuments(ctx, bson.M(filter))
 }
 
-func (r *CRUDRepository[T]) Fetch(fetchArgs *dtos.FetchArgs, out *[]T, opts ...CURDOptionFunc) (*dtos.FetchOutput[T], error) {
+type IFetchArgs interface {
+	Page() int64
+	Limit() int64
+	Order() map[string]interface{}
+	Filter() map[string]interface{}
+	IsHavingLocation() bool
+	IsOrderByLocation() bool
+	GetLng() float64
+	GetLat() float64
+	Search() string
+}
+
+type FetchOutput[T entities.IEntity] struct {
+	Total  int64 `json:"total"`
+	Result []T   `json:"result"`
+}
+
+func NewFetchOutput[T entities.IEntity](total int64, result []T) *FetchOutput[T] {
+	return &FetchOutput[T]{
+		Total:  total,
+		Result: result,
+	}
+}
+
+func (r *CRUDRepository[T]) Fetch(fetchArgs IFetchArgs, out *[]T, opts ...CURDOptionFunc) (*FetchOutput[T], error) {
 	ctx := context.Background()
 	o := _NewCRUDOption()
 	for _, v := range opts {
@@ -338,18 +361,18 @@ func (r *CRUDRepository[T]) Fetch(fetchArgs *dtos.FetchArgs, out *[]T, opts ...C
 		ctx = o.ctx
 	}
 	findOptions := options.Find()
-	findOptions.SetSkip((fetchArgs.Page - 1) * (fetchArgs.Limit))
-	findOptions.SetLimit(fetchArgs.Limit)
+	findOptions.SetSkip((fetchArgs.Page() - 1) * (fetchArgs.Limit()))
+	findOptions.SetLimit(fetchArgs.Limit())
 	var sort bson.D
-	if len(fetchArgs.Order) > 0 {
-		for k, v := range fetchArgs.Order {
+	if len(fetchArgs.Order()) > 0 {
+		for k, v := range fetchArgs.Order() {
 			sort = append(sort, bson.E{Key: k, Value: v})
 		}
 	}
 	if !fetchArgs.IsOrderByLocation() {
 		findOptions.SetSort(sort)
 	}
-	filter := fetchArgs.Filter
+	filter := fetchArgs.Filter()
 	if fetchArgs.IsHavingLocation() && fetchArgs.IsOrderByLocation() {
 		filter["location"] = map[string]interface{}{
 			"$nearSphere": map[string]interface{}{
@@ -361,7 +384,7 @@ func (r *CRUDRepository[T]) Fetch(fetchArgs *dtos.FetchArgs, out *[]T, opts ...C
 			},
 		}
 	}
-	if fetchArgs.Search != "" {
+	if fetchArgs.Search() != "" {
 		filter["$text"] = bson.D{{Key: "$search", Value: fetchArgs.Search}}
 		findOptions.SetProjection(bson.D{{Key: "score", Value: bson.D{{Key: "$meta", Value: "textScore"}}}})
 		findOptions.SetSort(bson.D{{Key: "score", Value: bson.D{{Key: "$meta", Value: "textScore"}}}})
@@ -381,7 +404,7 @@ func (r *CRUDRepository[T]) Fetch(fetchArgs *dtos.FetchArgs, out *[]T, opts ...C
 	if err != nil {
 		return nil, err
 	}
-	fetchOut := dtos.NewFetchOutput(count, *out)
+	fetchOut := NewFetchOutput(count, *out)
 	return fetchOut, nil
 }
 

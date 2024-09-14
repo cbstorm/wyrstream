@@ -7,6 +7,7 @@ import (
 )
 
 type IEntity interface {
+	New()
 	NewId() primitive.ObjectID
 	GetId() primitive.ObjectID
 	GetCreatedAt() time.Time
@@ -20,6 +21,11 @@ type BaseEntity struct {
 	Id        primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
 	CreatedAt time.Time          `bson:"createdAt,omitempty" json:"createdAt,omitempty"`
 	UpdatedAt time.Time          `bson:"updatedAt,omitempty" json:"updatedAt,omitempty"`
+}
+
+func (e *BaseEntity) New() {
+	e.NewId()
+	e.SetTime()
 }
 
 func (e *BaseEntity) NewId() primitive.ObjectID {

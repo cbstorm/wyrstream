@@ -4,6 +4,9 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"math"
+	"net/mail"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 func AssertDefaultRef[T any](v *T, d *T) *T {
@@ -54,4 +57,25 @@ func Haversine(lat1 float64, lon1 float64, lat2 float64, lon2 float64) float64 {
 func MD5Sum(str string) string {
 	token_sum := md5.Sum([]byte(str))
 	return hex.EncodeToString(token_sum[:])
+}
+
+func IsValidEmailAddress(email string) bool {
+	if _, err := mail.ParseAddress(email); err != nil {
+		return false
+	}
+	return true
+}
+
+func BcryptHash(text string) (string, error) {
+	hashed, err := bcrypt.GenerateFromPassword([]byte(text), 8)
+	if err != nil {
+		return "", err
+	}
+	return string(hashed), nil
+}
+func BcryptMatch(hashed string, text string) bool {
+	if err := bcrypt.CompareHashAndPassword([]byte(hashed), []byte(text)); err != nil {
+		return false
+	}
+	return true
 }

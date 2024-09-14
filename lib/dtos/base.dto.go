@@ -5,33 +5,32 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/cbstorm/wyrstream/lib/entities"
 	"github.com/cbstorm/wyrstream/lib/exceptions"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type FetchArgs struct {
-	Page     int64                  `json:"page,omitempty"`
-	Limit    int64                  `json:"limit,omitempty"`
-	Order    map[string]interface{} `json:"order,omitempty"`
-	Filter   map[string]interface{} `json:"filter"`
-	Search   string                 `json:"search,omitempty"`
-	Includes map[string]int         `json:"includes"`
-	Fields   map[string]int         `json:"fields"`
-	Location []float64              `json:"location"`
+	page     int64
+	limit    int64
+	order    map[string]interface{}
+	filter   map[string]interface{}
+	search   string
+	includes map[string]int
+	fields   map[string]int
+	location []float64
 }
 
 func NewFetchArgs() *FetchArgs {
 	return &FetchArgs{
-		Page:  1,
-		Limit: 10,
-		Order: map[string]interface{}{
+		page:  1,
+		limit: 10,
+		order: map[string]interface{}{
 			"_id": -1,
 		},
-		Filter:   map[string]interface{}{},
-		Includes: map[string]int{},
-		Fields:   map[string]int{},
-		Location: []float64{0, 0},
+		filter:   map[string]interface{}{},
+		includes: map[string]int{},
+		fields:   map[string]int{},
+		location: []float64{0, 0},
 	}
 }
 
@@ -40,19 +39,19 @@ func (fetchArgs *FetchArgs) ParseQueries(input map[string]string) *FetchArgs {
 	if err != nil || page < 0 {
 		page = 1
 	} else {
-		fetchArgs.Page = int64(page)
+		fetchArgs.page = int64(page)
 	}
 	limit, err := strconv.Atoi(input["limit"])
 	if err != nil || limit < 0 {
 		limit = 10
 	} else {
-		fetchArgs.Limit = int64(limit)
+		fetchArgs.limit = int64(limit)
 	}
 	includes_str := input["includes"]
 	if includes_str != "" {
 		includes := strings.Split(includes_str, ",")
 		for _, v := range includes {
-			fetchArgs.Includes[v] = 1
+			fetchArgs.includes[v] = 1
 		}
 	}
 	filter_str := input["filter"]
@@ -62,19 +61,19 @@ func (fetchArgs *FetchArgs) ParseQueries(input map[string]string) *FetchArgs {
 			e := strings.Split(v, ":")
 			obj_id, err := primitive.ObjectIDFromHex(e[1])
 			if err == nil {
-				fetchArgs.Filter[e[0]] = obj_id
+				fetchArgs.filter[e[0]] = obj_id
 				continue
 			}
 			if e[1] == "true" || e[1] == "false" {
 				if e[1] == "true" {
-					fetchArgs.Filter[e[0]] = true
+					fetchArgs.filter[e[0]] = true
 				}
 				if e[1] == "false" {
-					fetchArgs.Filter[e[0]] = false
+					fetchArgs.filter[e[0]] = false
 				}
 				continue
 			}
-			fetchArgs.Filter[e[0]] = e[1]
+			fetchArgs.filter[e[0]] = e[1]
 		}
 	}
 
@@ -85,12 +84,12 @@ func (fetchArgs *FetchArgs) ParseQueries(input map[string]string) *FetchArgs {
 			e := strings.Split(v, ":")
 			obj_id, err := primitive.ObjectIDFromHex(e[1])
 			if err == nil {
-				fetchArgs.Filter[e[0]] = map[string]interface{}{
+				fetchArgs.filter[e[0]] = map[string]interface{}{
 					"$ne": obj_id,
 				}
 				continue
 			}
-			fetchArgs.Filter[e[0]] = map[string]interface{}{
+			fetchArgs.filter[e[0]] = map[string]interface{}{
 				"$ne": e[1],
 			}
 		}
@@ -98,13 +97,13 @@ func (fetchArgs *FetchArgs) ParseQueries(input map[string]string) *FetchArgs {
 
 	sort_str := input["sort"]
 	if sort_str != "" {
-		fetchArgs.Order = map[string]interface{}{}
+		fetchArgs.order = map[string]interface{}{}
 		sort := strings.Split(sort_str, ",")
 		for _, v := range sort {
 			e := strings.Split(v, ":")
 			e_val, err := strconv.Atoi(e[1])
 			if err == nil {
-				fetchArgs.Order[e[0]] = e_val
+				fetchArgs.order[e[0]] = e_val
 			}
 		}
 	}
@@ -114,54 +113,57 @@ func (fetchArgs *FetchArgs) ParseQueries(input map[string]string) *FetchArgs {
 		lat, lat_err := strconv.ParseFloat(lat_lng[0], 64)
 		lng, lng_err := strconv.ParseFloat(lat_lng[1], 64)
 		if lat_err == nil && lng_err == nil {
-			fetchArgs.Location = []float64{lat, lng}
+			fetchArgs.location = []float64{lat, lng}
 		}
 	}
-	fetchArgs.Search = input["search"]
+	fetchArgs.search = input["search"]
 	return fetchArgs
 }
 
 func (fetchArgs *FetchArgs) SetFilter(key string, value interface{}) *FetchArgs {
-	fetchArgs.Filter[key] = value
+	fetchArgs.filter[key] = value
 	return fetchArgs
 }
 
 func (fetchArgs *FetchArgs) SetOrder(key string, value interface{}) *FetchArgs {
-	fetchArgs.Order[key] = value
+	fetchArgs.order[key] = value
 	return fetchArgs
 }
 func (fetchArgs *FetchArgs) SetLimit(limit int64) *FetchArgs {
-	fetchArgs.Limit = limit
+	fetchArgs.limit = limit
 	return fetchArgs
 }
 
 func (fetchArgs *FetchArgs) IsIncludes(key string) bool {
-	return fetchArgs.Includes[key] == 1
+	return fetchArgs.includes[key] == 1
 }
 func (fetchArgs *FetchArgs) IsHavingLocation() bool {
-	return fetchArgs.Location[0] != 0 && fetchArgs.Location[1] != 0
+	return fetchArgs.location[0] != 0 && fetchArgs.location[1] != 0
 }
 
 func (fetchArgs *FetchArgs) IsOrderByLocation() bool {
-	return fetchArgs.Order["location"] == 1
+	return fetchArgs.order["location"] == 1
 }
 func (fetchArgs *FetchArgs) GetLat() float64 {
-	return fetchArgs.Location[0]
+	return fetchArgs.location[0]
 }
 func (fetchArgs *FetchArgs) GetLng() float64 {
-	return fetchArgs.Location[1]
+	return fetchArgs.location[1]
 }
-
-type FetchOutput[T entities.IEntity] struct {
-	Total  int64 `json:"total"`
-	Result []T   `json:"result"`
+func (fetchArgs *FetchArgs) Page() int64 {
+	return fetchArgs.page
 }
-
-func NewFetchOutput[T entities.IEntity](total int64, result []T) *FetchOutput[T] {
-	return &FetchOutput[T]{
-		Total:  total,
-		Result: result,
-	}
+func (fetchArgs *FetchArgs) Limit() int64 {
+	return fetchArgs.limit
+}
+func (fetchArgs *FetchArgs) Order() map[string]interface{} {
+	return fetchArgs.order
+}
+func (fetchArgs *FetchArgs) Filter() map[string]interface{} {
+	return fetchArgs.filter
+}
+func (fetchArgs *FetchArgs) Search() string {
+	return fetchArgs.search
 }
 
 type LoadInput struct {

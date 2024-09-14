@@ -27,7 +27,7 @@ type RequestContext struct {
 	path            string
 	role            string
 	is_auth         bool
-	payload         *map[string]interface{}
+	payload         map[string]interface{}
 	timezone_offset int
 }
 
@@ -54,7 +54,7 @@ func (ctx *RequestContext) Auth() error {
 		return err
 	}
 	ctx.is_auth = true
-	ctx.payload = &payload
+	ctx.payload = payload
 	objId, err := primitive.ObjectIDFromHex(payload["_id"].(string))
 	if err != nil {
 		return exceptions.Err_UNAUTHORIZED().SetMessage("UNAUTHORIZED")
@@ -85,7 +85,7 @@ func (ctx *RequestContext) AuthUser() error {
 			return err
 		}
 	}
-	role := (*payload)["role"].(string)
+	role := payload["role"].(string)
 	if role != enums.USER_ROLE_USER {
 		return exceptions.Err_FORBIDEN().SetMessage("FORBIDEN")
 	}
@@ -112,7 +112,7 @@ func (ctx *RequestContext) AuthAdmin() error {
 			return err
 		}
 	}
-	role := (*payload)["role"].(string)
+	role := payload["role"].(string)
 	if role != enums.USER_ROLE_ADMIN {
 		return exceptions.Err_FORBIDEN().SetMessage("FORBIDEN")
 	}
