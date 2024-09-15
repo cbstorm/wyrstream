@@ -1,6 +1,7 @@
 package nats_service
 
 import (
+	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
@@ -96,17 +97,21 @@ func WithTimeout(t time.Duration) RequestOptFunc {
 	}
 }
 
-func (ns *NATS_Service) Request(subj string, data []byte, opts ...RequestOptFunc) ([]byte, error) {
+func (ns *NATS_Service) Request(subj string, data []byte, opts ...RequestOptFunc) (*ResponseMessage, error) {
 	o := &RequestOpts{}
 	for _, v := range opts {
 		v(o)
 	}
 	if o.timeout == 0 {
-		o.timeout = time.Second * 20
+		o.timeout = DEFAULT_TIMEOUT
 	}
 	msg, err := ns.nats_client.Request(subj, data, o.timeout)
 	if err != nil {
 		return nil, err
 	}
-	return msg.Data, nil
+	res := &ResponseMessage{}
+	if err := json.Unmarshal(msg.Data, res); err != nil {
+		return nil, err
+	}
+	return res, nil
 }

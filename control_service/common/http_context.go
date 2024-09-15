@@ -20,4 +20,6 @@ type IHttpContext interface {
 	Next() error
 	IP() string
 	OriginalURL() string
+	BodyRaw() []byte
+	BodyParser(out interface{}) error
 }

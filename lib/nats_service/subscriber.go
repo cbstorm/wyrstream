@@ -1,22 +1,13 @@
 package nats_service
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/cbstorm/wyrstream/lib/logger"
+	"github.com/cbstorm/wyrstream/lib/utils"
 	"github.com/google/uuid"
 	"github.com/nats-io/nats.go"
 )
-
-type ResponseMessage struct {
-	Data  interface{} `json:"data"`
-	Error error       `json:"error"`
-}
-
-func (m *ResponseMessage) ToBytes() ([]byte, error) {
-	return json.Marshal(m)
-}
 
 type SubcriberOpts struct {
 	concurrency uint32
@@ -101,9 +92,19 @@ func (s *Subscriber) Start(nc *nats.Conn, queue_group string) error {
 				<-limit_ch
 			}()
 			m := &RequestMessage{data: msg.Data}
+			res := &ResponseMessage{}
 			res_data, err := s.handler(m)
-			res := &ResponseMessage{Data: res_data, Error: err}
-			r, err := res.ToBytes()
+			if err != nil {
+				res.Error = err
+			} else {
+				res_bytes, err := utils.Encode(res_data)
+				if err != nil {
+					res.Error = err
+				} else {
+					res.Data = res_bytes
+				}
+			}
+			r, err := res.Encode()
 			if err != nil {
 				s.logger.Error("%v", err)
 				return

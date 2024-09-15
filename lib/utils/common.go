@@ -1,7 +1,9 @@
 package utils
 
 import (
+	"bytes"
 	"crypto/md5"
+	"encoding/gob"
 	"encoding/hex"
 	"math"
 	"net/mail"
@@ -78,4 +80,12 @@ func BcryptMatch(hashed string, text string) bool {
 		return false
 	}
 	return true
+}
+
+func Encode(p interface{}) ([]byte, error) {
+
+	buf := bytes.Buffer{}
+	enc := gob.NewEncoder(&buf)
+	err := enc.Encode(p)
+	return buf.Bytes(), err
 }
