@@ -49,7 +49,7 @@ mkenv:
 	NATS_CORE_PORT=\n \
 	NATS_CORE_QUEUE_GROUP=\n \
 	HTTP_HOST=\n \
-	HTTP_PORT=\n" \
+	HTTP_PORT=\n \
 	REDIS_USERNAME=\n \
 	REDIS_PASSWORD=\n \
 	REDIS_HOST=\n \

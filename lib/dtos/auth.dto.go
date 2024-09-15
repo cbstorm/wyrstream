@@ -35,6 +35,10 @@ type UserCreateAccountReponse struct {
 	UpdatedAt time.Time          `json:"updatedAt"`
 }
 
+type UserGetMeInput struct {
+	UserId primitive.ObjectID `json:"user_id"`
+}
+
 type UserRefreshTokenInput struct {
 	Token        string `json:"token,omitempty"`
 	RefreshToken string `json:"refresh_token,omitempty"`

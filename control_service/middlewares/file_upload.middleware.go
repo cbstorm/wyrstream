@@ -5,10 +5,11 @@ import (
 
 	"github.com/cbstorm/wyrstream/control_service/common"
 	"github.com/cbstorm/wyrstream/lib/dtos"
+	"github.com/gofiber/fiber/v2"
 )
 
 func FileUploadMiddleware(file_key string) HttpMiddleware {
-	return func(c common.IHttpContext) error {
+	return func(c *fiber.Ctx) error {
 		form, err := c.MultipartForm()
 		if err != nil {
 			return common.ResponseError(c, err)

@@ -1,7 +1,7 @@
 package middlewares
 
 import (
-	"github.com/cbstorm/wyrstream/control_service/common"
+	"github.com/gofiber/fiber/v2"
 )
 
-type HttpMiddleware func(common.IHttpContext) error
+type HttpMiddleware func(*fiber.Ctx) error

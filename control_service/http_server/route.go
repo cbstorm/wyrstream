@@ -1,7 +1,7 @@
 package http_server
 
 import (
-	"github.com/cbstorm/wyrstream/control_service/common"
+	"github.com/gofiber/fiber/v2"
 )
 
 type Method string
@@ -16,6 +16,6 @@ const (
 type HTTPRoute struct {
 	Method   Method
 	Endpoint string
-	Handlers []func(common.IHttpContext) error
+	Handlers []func(*fiber.Ctx) error
 	Disable  bool
 }

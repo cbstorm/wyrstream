@@ -7,10 +7,9 @@ import (
 )
 
 type UserReponse struct {
-	Id          primitive.ObjectID `json:"_id,omitempty"`
-	Name        string             `json:"name"`
-	Email       string             `json:"email"`
-	IsNoCompany bool               `json:"isNoCompany"`
-	CreatedAt   time.Time          `json:"createdAt,omitempty"`
-	UpdatedAt   time.Time          `json:"updatedAt,omitempty"`
+	Id        primitive.ObjectID `json:"_id,omitempty"`
+	Name      string             `json:"name"`
+	Email     string             `json:"email"`
+	CreatedAt time.Time          `json:"createdAt,omitempty"`
+	UpdatedAt time.Time          `json:"updatedAt,omitempty"`
 }

@@ -3,7 +3,6 @@ package main
 import (
 	"sync"
 
-	"github.com/cbstorm/wyrstream/control_service/common"
 	"github.com/cbstorm/wyrstream/lib/dtos"
 	"github.com/cbstorm/wyrstream/lib/entities"
 	"github.com/cbstorm/wyrstream/lib/enums"
@@ -102,9 +101,9 @@ func (svc *AuthService) UserCreateAccount(input *dtos.UserCreateAccountInput) (*
 	return out, nil
 }
 
-func (svc *AuthService) UserGetMe(reqCtx *common.RequestContext) (*dtos.UserReponse, error) {
+func (svc *AuthService) UserGetMe(input *dtos.UserGetMeInput) (*dtos.UserReponse, error) {
 	user := entities.NewUserEntity()
-	err, is_not_found := svc.user_repository.FindOneById(reqCtx.GetObjId(), user)
+	err, is_not_found := svc.user_repository.FindOneById(input.UserId, user)
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +120,7 @@ func (svc *AuthService) UserGetMe(reqCtx *common.RequestContext) (*dtos.UserRepo
 	return out, nil
 }
 
-func (svc *AuthService) UserRefreshToken(input *dtos.UserRefreshTokenInput, reqCtx *common.RequestContext) (*dtos.UserRefreshTokenOutput, error) {
+func (svc *AuthService) UserRefreshToken(input *dtos.UserRefreshTokenInput) (*dtos.UserRefreshTokenOutput, error) {
 	payload, err := helpers.VerifyAuthToken(input.RefreshToken)
 	if err != nil {
 		return nil, err

@@ -3,3 +3,4 @@ dist
 .opt
 .vscode
 **/*.exe
+**/__debug*

@@ -51,7 +51,7 @@ func (a *HttpServer) Init() *HttpServer {
 			a.logger.Error("%s %s %s", ctx.IP(), ctx.OriginalURL(), ctx.BodyRaw())
 			return ctx.Status(code).SendString("Internal Server Error")
 		},
-		BodyLimit: 30 * 1024 * 1024,
+		BodyLimit: 5 * 1024 * 1024,
 	})
 	app.Use(recover.New())
 	app.Use(cors.New(cors.Config{
@@ -68,13 +68,7 @@ func (a *HttpServer) Init() *HttpServer {
 
 func (a *HttpServer) AddRoutes() *HttpServer {
 	for _, route := range a.routes {
-		handlers := make([]func(*fiber.Ctx) error, len(route.Handlers))
-		for i, f := range route.Handlers {
-			handlers[i] = func(c *fiber.Ctx) error {
-				return f(c)
-			}
-		}
-		a.fiber_app.Add(string(route.Method), route.Endpoint, handlers...)
+		a.fiber_app.Add(string(route.Method), route.Endpoint, route.Handlers...)
 	}
 	return a
 }

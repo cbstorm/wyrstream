@@ -20,3 +20,11 @@ var _ = nats_service.GetNATSService().AddSubcriber(nats_service.NewSubscriber("a
 	}
 	return GetAuthService().UserCreateAccount(user_create_account_input)
 }))
+
+var _ = nats_service.GetNATSService().AddSubcriber(nats_service.NewSubscriber("auth.user.get_me", func(m nats_service.IRequestMessage) (interface{}, error) {
+	user_get_me_input := &dtos.UserGetMeInput{}
+	if err := m.JSONParse(user_get_me_input); err != nil {
+		return nil, err
+	}
+	return GetAuthService().UserGetMe(user_get_me_input)
+}))
