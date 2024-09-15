@@ -20,6 +20,7 @@ func GetRedisService() *RedisService {
 		redis_service_sync.Do(func() {
 			redis_service = &RedisService{
 				logger: logger.NewLogger("REDIS_SERVICE"),
+				config: configs.GetConfig(),
 			}
 		})
 	}
@@ -34,7 +35,6 @@ type RedisService struct {
 }
 
 func (i *RedisService) Connect() error {
-
 	rdb := redis.NewClient(&redis.Options{
 		Username: i.config.REDIS_USERNAME,
 		Password: i.config.REDIS_PASSWORD,

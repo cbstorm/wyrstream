@@ -22,7 +22,8 @@ func GetAuthService() *AuthService {
 	if instance == nil {
 		instance_sync.Do(func() {
 			instance = &AuthService{
-				logger: logger.NewLogger("AUTH_SERVICE"),
+				logger:          logger.NewLogger("AUTH_SERVICE"),
+				user_repository: repositories.GetUserRepository(),
 			}
 		})
 	}

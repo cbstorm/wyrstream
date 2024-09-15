@@ -1,10 +1,10 @@
 package nats_service
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/cbstorm/wyrstream/lib/logger"
-	"github.com/cbstorm/wyrstream/lib/utils"
 	"github.com/google/uuid"
 	"github.com/nats-io/nats.go"
 )
@@ -34,14 +34,14 @@ const (
 type Subscriber struct {
 	id, subject          string
 	concurrency          uint32
-	handler              func(IMessage) (interface{}, error)
+	handler              func(IRequestMessage) (interface{}, error)
 	status               SubscriberStatus
 	logger               *logger.Logger
 	subscription         *nats.Subscription
 	subscription_channel chan *nats.Msg // Close when unsubscribe
 }
 
-func NewSubscriber(subj string, handler func(IMessage) (interface{}, error), opts ...SubcriberOptFunc) *Subscriber {
+func NewSubscriber(subj string, handler func(IRequestMessage) (interface{}, error), opts ...SubcriberOptFunc) *Subscriber {
 	op := &SubcriberOpts{}
 	for _, v := range opts {
 		v(op)
@@ -66,7 +66,7 @@ func (s *Subscriber) SetSubject(subj string) *Subscriber {
 	return s
 }
 
-func (s *Subscriber) SetHandler(handler func(IMessage) (interface{}, error)) *Subscriber {
+func (s *Subscriber) SetHandler(handler func(IRequestMessage) (interface{}, error)) *Subscriber {
 	s.handler = handler
 	return s
 }
@@ -92,19 +92,9 @@ func (s *Subscriber) Start(nc *nats.Conn, queue_group string) error {
 				<-limit_ch
 			}()
 			m := &RequestMessage{data: msg.Data}
-			res := &ResponseMessage{}
-			res_data, err := s.handler(m)
-			if err != nil {
-				res.Error = err
-			} else {
-				res_bytes, err := utils.Encode(res_data)
-				if err != nil {
-					res.Error = err
-				} else {
-					res.Data = res_bytes
-				}
-			}
-			r, err := res.Encode()
+			result, err := s.handler(m)
+			res := &ResponseMessage{Data: result, Error: err}
+			r, err := json.Marshal(res)
 			if err != nil {
 				s.logger.Error("%v", err)
 				return

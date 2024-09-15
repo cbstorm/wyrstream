@@ -85,10 +85,10 @@ func (a *HttpServer) FeedRoute(route *HTTPRoute) bool {
 	if !a.initiated {
 		a.Init()
 	}
-	if route.Enable {
+	if !route.Disable {
 		a.routes = append(a.routes, route)
 	}
-	return route.Enable
+	return !route.Disable
 }
 
 func (a *HttpServer) Listen() error {

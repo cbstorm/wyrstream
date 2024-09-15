@@ -7,7 +7,7 @@ import (
 
 const DEFAULT_TIMEOUT time.Duration = time.Second * 20
 
-type IMessage interface {
+type IRequestMessage interface {
 	Data() []byte
 	JSONParse(interface{}) error
 }
@@ -25,14 +25,14 @@ func (m *RequestMessage) JSONParse(out interface{}) error {
 }
 
 type ResponseMessage struct {
-	Data  []byte `json:"data"`
-	Error error  `json:"error"`
+	Data  interface{} `json:"data"`
+	Error interface{} `json:"error"`
 }
 
 func (m *ResponseMessage) Encode() ([]byte, error) {
 	return json.Marshal(m)
 }
 
-func (m *ResponseMessage) Decode(out interface{}) error {
-	return json.Unmarshal(m.Data, out)
-}
+// func (m *ResponseMessage) Decode(out interface{}) error {
+// 	return json.Unmarshal(m.Data, out)
+// }

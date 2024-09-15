@@ -83,7 +83,6 @@ func BcryptMatch(hashed string, text string) bool {
 }
 
 func Encode(p interface{}) ([]byte, error) {
-
 	buf := bytes.Buffer{}
 	enc := gob.NewEncoder(&buf)
 	err := enc.Encode(p)

@@ -7,6 +7,7 @@ import (
 	"github.com/cbstorm/wyrstream/lib/database"
 	"github.com/cbstorm/wyrstream/lib/logger"
 	natsservice "github.com/cbstorm/wyrstream/lib/nats_service"
+	"github.com/cbstorm/wyrstream/lib/redis_service"
 )
 
 func main() {
@@ -19,6 +20,9 @@ func main() {
 	}
 	if err := database.GetDatabase().Connect(); err != nil {
 		logg.Fatal("Could not connect to database %v", err)
+	}
+	if err := redis_service.GetRedisService().Connect(); err != nil {
+		logg.Fatal("Could not connect to redis server with err: %v", err)
 	}
 	if err := natsservice.GetNATSService().Connect(); err != nil {
 		logg.Fatal("Could not connect to NATS server with err: %v", err)

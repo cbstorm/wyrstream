@@ -10,5 +10,4 @@ var _ = GetHttpServer().FeedRoute(&HTTPRoute{
 			return ctx.Status(200).JSON("users")
 		},
 	},
-	Enable: true,
 })

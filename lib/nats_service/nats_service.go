@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/cbstorm/wyrstream/lib/configs"
+	"github.com/cbstorm/wyrstream/lib/exceptions"
 	"github.com/cbstorm/wyrstream/lib/logger"
 	"github.com/nats-io/nats.go"
 )
@@ -97,7 +98,7 @@ func WithTimeout(t time.Duration) RequestOptFunc {
 	}
 }
 
-func (ns *NATS_Service) Request(subj string, data []byte, opts ...RequestOptFunc) (*ResponseMessage, error) {
+func (ns *NATS_Service) Request(subj string, data []byte, opts ...RequestOptFunc) (interface{}, error) {
 	o := &RequestOpts{}
 	for _, v := range opts {
 		v(o)
@@ -113,5 +114,10 @@ func (ns *NATS_Service) Request(subj string, data []byte, opts ...RequestOptFunc
 	if err := json.Unmarshal(msg.Data, res); err != nil {
 		return nil, err
 	}
-	return res, nil
+	if res.Error != nil {
+		err, _ := res.Error.(map[string]interface{})
+		e := exceptions.NewException(err["name"].(string)).SetMessage(err["message"].(string)).SetStatus(int(err["status"].(float64)))
+		return nil, e
+	}
+	return res.Data, nil
 }

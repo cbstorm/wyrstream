@@ -17,5 +17,5 @@ type HTTPRoute struct {
 	Method   Method
 	Endpoint string
 	Handlers []func(common.IHttpContext) error
-	Enable   bool
+	Disable  bool
 }
