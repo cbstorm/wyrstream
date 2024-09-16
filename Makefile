@@ -37,8 +37,10 @@ clean:
 
 work:
 	$(CC) work init $(CONTROL_SERVICE_DIR) $(STREAM_SERVICE_DIR) $(AUTH_SERVICE_DIR) $(LIB_DIR)
-docker-dev:
+up:
 	docker compose -f docker-compose.dev.yml up -d
+down:
+	docker compose -f docker-compose.dev.yml down
 mkenv:
 	@echo "MONGODB_URL=\n \
 	MONGODB_DB_NAME=\n \
@@ -57,4 +59,16 @@ mkenv:
 	REDIS_KEY_PREFIX=\n \
 	> .env
 setup: mkenv
+route:
+	npx plop route
+entity:
+	npx plop entity
+service:
+	npx plop service
+repository:
+	npx plop repository
+dto:
+	npx plop dto
+module:
+	npx plop module
 

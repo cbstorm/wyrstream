@@ -11,13 +11,13 @@ import (
 
 var _ = GetHttpServer().FeedRoute(&HTTPRoute{
 	Method:   GET,
-	Endpoint: "/{{Plural name}}",
+	Endpoint: "/streams",
 	Handlers: []func(*fiber.Ctx) error{
 		func(c *fiber.Ctx) error {
 			req_ctx := common.GetRequestContext(c)
 			fetchArgs := dtos.NewFetchArgs()
 			fetchArgs.ParseQueries(c.Queries())
-			res, err := services.Get{{Case name}}Service().Fetch{{PluralCase name}}(fetchArgs, req_ctx)
+			res, err := services.GetStreamService().FetchStreams(fetchArgs, req_ctx)
 			if err != nil {
 				return common.ResponseError(c, err)
 			}
@@ -28,7 +28,7 @@ var _ = GetHttpServer().FeedRoute(&HTTPRoute{
 
 var _ = GetHttpServer().FeedRoute(&HTTPRoute{
 	Method:   GET,
-	Endpoint: "/{{Plural name}}/:id",
+	Endpoint: "/streams/:id",
 	Handlers: []func(*fiber.Ctx) error{
 		func(c *fiber.Ctx) error {
 			req_ctx := common.GetRequestContext(c)
@@ -36,7 +36,7 @@ var _ = GetHttpServer().FeedRoute(&HTTPRoute{
 			if err != nil {
 				return common.ResponseError(c, err)
 			}
-			res, err := services.Get{{Case name}}Service().GetOne{{Case name}}(input, req_ctx)
+			res, err := services.GetStreamService().GetOneStream(input, req_ctx)
 			if err != nil {
 				return common.ResponseError(c, err)
 			}
@@ -47,18 +47,18 @@ var _ = GetHttpServer().FeedRoute(&HTTPRoute{
 
 var _ = GetHttpServer().FeedRoute(&HTTPRoute{
 	Method:   POST,
-	Endpoint: "/{{Plural name}}",
+	Endpoint: "/streams",
 	Handlers: []func(*fiber.Ctx) error{
 		middlewares.AuthMiddleware,
 		middlewares.BodyRequiredMiddleware,
 		func(c *fiber.Ctx) error {
 			req_ctx := common.GetRequestContext(c)
-			input := dtos.NewCreateOne{{Case name}}Input()
+			input := dtos.NewCreateOneStreamInput()
 			if err := c.BodyParser(input); err != nil {
 				e := exceptions.Err_BAD_REQUEST().SetMessage(err.Error())
 				return common.ResponseError(c, e)
 			}
-			res, err := services.Get{{Case name}}Service().CreateOne{{Case name}}(input, req_ctx)
+			res, err := services.GetStreamService().CreateOneStream(input, req_ctx)
 			if err != nil {
 				return common.ResponseError(c, err)
 			}
@@ -69,13 +69,13 @@ var _ = GetHttpServer().FeedRoute(&HTTPRoute{
 
 var _ = GetHttpServer().FeedRoute(&HTTPRoute{
 	Method:   PUT,
-	Endpoint: "/{{Plural name}}/:id",
+	Endpoint: "/streams",
 	Handlers: []func(*fiber.Ctx) error{
 		middlewares.AuthMiddleware,
 		middlewares.BodyRequiredMiddleware,
 		func(c *fiber.Ctx) error {
 			req_ctx := common.GetRequestContext(c)
-			input, err := dtos.NewUpdateOne{{Case name}}Input().SetId(c.Params("id"))
+			input, err := dtos.NewUpdateOneStreamInput().SetId(c.Params("id"))
 			if err != nil {
 				return common.ResponseError(c, err)
 			}
@@ -83,7 +83,7 @@ var _ = GetHttpServer().FeedRoute(&HTTPRoute{
 				e := exceptions.Err_BAD_REQUEST().SetMessage(err.Error())
 				return common.ResponseError(c, e)
 			}
-			res, err := services.Get{{Case name}}Service().UpdateOne{{Case name}}(input, req_ctx)
+			res, err := services.GetStreamService().UpdateOneStream(input, req_ctx)
 			if err != nil {
 				e := exceptions.NewFromError(err)
 				return common.ResponseError(c, e)
@@ -95,15 +95,16 @@ var _ = GetHttpServer().FeedRoute(&HTTPRoute{
 
 var _ = GetHttpServer().FeedRoute(&HTTPRoute{
 	Method:   DELETE,
-	Endpoint: "/{{Plural name}}/:id",
+	Endpoint: "/streams/:id",
 	Handlers: []func(*fiber.Ctx) error{
+		middlewares.AuthMiddleware,
 		func(c *fiber.Ctx) error {
 			req_ctx := common.GetRequestContext(c)
 			input, err := dtos.NewDeleteOneInput().SetId(c.Params("id"))
 			if err != nil {
 				return common.ResponseError(c, err)
 			}
-			res, err := services.Get{{Case name}}Service().DeleteOne{{Case name}}(input, req_ctx)
+			res, err := services.GetStreamService().DeleteOneStream(input, req_ctx)
 			if err != nil {
 				return common.ResponseError(c, err)
 			}

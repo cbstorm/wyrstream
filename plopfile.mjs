@@ -1,6 +1,5 @@
 import dto from './__generator/dto.generator.mjs';
 import entity from './__generator/entity.generator.mjs';
-import job from './__generator/job.generator.mjs';
 import module from './__generator/module.generator.mjs';
 import repository from './__generator/repository.generator.mjs';
 import route from './__generator/route.generator.mjs';
@@ -12,7 +11,6 @@ const generate = (plop) => {
   dto(plop);
   module(plop);
   route(plop);
-  job(plop);
 
   plop.setHelper('Case', function (text) {
     return (text[0].toUpperCase() + text.slice(1)).replaceAll('_', '');

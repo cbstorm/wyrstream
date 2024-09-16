@@ -1,1 +1,66 @@
 package services
+
+import (
+	"sync"
+
+	"github.com/cbstorm/wyrstream/control_service/common"
+	"github.com/cbstorm/wyrstream/lib/dtos"
+	"github.com/cbstorm/wyrstream/lib/entities"
+	"github.com/cbstorm/wyrstream/lib/exceptions"
+	"github.com/cbstorm/wyrstream/lib/repositories"
+)
+
+var {{name}}_service *{{Case name}}Service
+var {{name}}_service_sync sync.Once
+
+func Get{{Case name}}Service() *{{Case name}}Service {
+	if {{name}}_service == nil {
+		{{name}}_service_sync.Do(func() {
+			{{name}}_service = New{{Case name}}Service()
+		})
+	}
+	return {{name}}_service
+}
+
+type {{Case name}}Service struct {
+	{{name}}_repository *repositories.{{Case name}}Repository
+}
+
+func New{{Case name}}Service() *{{Case name}}Service {
+	return &{{Case name}}Service{
+		{{name}}_repository: repositories.Get{{Case name}}Repository(),
+	}
+}
+
+func (svc *{{Case name}}Service) Fetch{{Case name}}s(fetchArgs *dtos.FetchArgs, reqCtx *common.RequestContext) (*repositories.FetchOutput[*entities.{{Case name}}Entity], error) {
+	{{Plural name}} := make([]*entities.{{Case name}}Entity, 0)
+	return svc.{{name}}_repository.Fetch(fetchArgs, &{{Plural name}})
+}
+
+func (svc *{{Case name}}Service) GetOne{{Case name}}(input *dtos.GetOneInput, reqCtx *common.RequestContext) (*entities.{{Case name}}Entity, error) {
+	{{name}} := entities.New{{Case name}}Entity()
+	err, is_not_found := svc.{{name}}_repository.FindOneById(input.Id, {{name}})
+	if err != nil {
+		return nil, err
+	}
+	if is_not_found {
+		return nil, exceptions.Err_RESOURCE_NOT_FOUND()
+	}
+	return {{name}}, nil
+}
+
+func (svc *{{Case name}}Service) CreateOne{{Case name}}(input *dtos.CreateOne{{Case name}}Input, reqCtx *common.RequestContext) (*entities.{{Case name}}Entity, error) {
+	{{Case name}} := entities.New{{Case name}}Entity()
+	return {{Case name}}, nil
+}
+
+func (svc *{{Case name}}Service) UpdateOne{{Case name}}(input *dtos.UpdateOne{{Case name}}Input, reqCtx *common.RequestContext) (*entities.{{Case name}}Entity, error) {
+	{{name}} := entities.New{{Case name}}Entity()
+	{{name}}.SetTime()
+	return {{name}}, nil
+}
+
+func (svc *{{Case name}}Service) DeleteOne{{Case name}}(input *dtos.DeleteOneInput, reqCtx *common.RequestContext) (*entities.{{Case name}}Entity, error) {
+	{{name}} := entities.New{{Case name}}Entity()
+	return {{name}}, nil
+}
