@@ -40,7 +40,7 @@ type UserGetMeInput struct {
 }
 
 type UserRefreshTokenInput struct {
-	Token        string `json:"token,omitempty"`
+	AccesssToken string `json:"access_token,omitempty"`
 	RefreshToken string `json:"refresh_token,omitempty"`
 }
 

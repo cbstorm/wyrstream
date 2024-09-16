@@ -50,8 +50,8 @@ func (svc *{{Case name}}Service) GetOne{{Case name}}(input *dtos.GetOneInput, re
 }
 
 func (svc *{{Case name}}Service) CreateOne{{Case name}}(input *dtos.CreateOne{{Case name}}Input, reqCtx *common.RequestContext) (*entities.{{Case name}}Entity, error) {
-	{{Case name}} := entities.New{{Case name}}Entity()
-	return {{Case name}}, nil
+	{{name}} := entities.New{{Case name}}Entity()
+	return {{name}}, nil
 }
 
 func (svc *{{Case name}}Service) UpdateOne{{Case name}}(input *dtos.UpdateOne{{Case name}}Input, reqCtx *common.RequestContext) (*entities.{{Case name}}Entity, error) {

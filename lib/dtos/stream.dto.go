@@ -4,11 +4,17 @@ import (
 	"fmt"
 
 	"github.com/cbstorm/wyrstream/lib/exceptions"
+	"github.com/cbstorm/wyrstream/lib/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type CreateOneStreamInput struct {
-	Name string `json:"name,omitempty"`
+	Title       string `json:"title,omitempty" validate:"required,min_length=6,max_length=50"`
+	Description string `json:"description,omitempty" validate:"required,min_length=6,max_length=255"`
+}
+
+func (i *CreateOneStreamInput) Validate() error {
+	return utils.NewValidator(i).Validate()
 }
 
 func NewCreateOneStreamInput() *CreateOneStreamInput {

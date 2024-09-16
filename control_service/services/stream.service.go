@@ -50,8 +50,9 @@ func (svc *StreamService) GetOneStream(input *dtos.GetOneInput, reqCtx *common.R
 }
 
 func (svc *StreamService) CreateOneStream(input *dtos.CreateOneStreamInput, reqCtx *common.RequestContext) (*entities.StreamEntity, error) {
-	Stream := entities.NewStreamEntity()
-	return Stream, nil
+	stream := entities.NewStreamEntity()
+	stream.PublisherId = reqCtx.GetObjId()
+	return stream, nil
 }
 
 func (svc *StreamService) UpdateOneStream(input *dtos.UpdateOneStreamInput, reqCtx *common.RequestContext) (*entities.StreamEntity, error) {

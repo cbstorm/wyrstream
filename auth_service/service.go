@@ -121,14 +121,14 @@ func (svc *AuthService) UserGetMe(input *dtos.UserGetMeInput) (*dtos.UserReponse
 }
 
 func (svc *AuthService) UserRefreshToken(input *dtos.UserRefreshTokenInput) (*dtos.UserRefreshTokenOutput, error) {
-	payload, err := helpers.VerifyAuthToken(input.RefreshToken)
+	refresh_token_payload, err := helpers.VerifyAuthToken(input.RefreshToken)
 	if err != nil {
 		return nil, err
 	}
-	if payload["token"] != utils.MD5Sum(input.Token) {
+	if refresh_token_payload["token"] != utils.MD5Sum(input.AccesssToken) {
 		return nil, exceptions.Err_UNAUTHORIZED().SetMessage("UNAUTHORIZED")
 	}
-	id := payload["_id"].(string)
+	id := refresh_token_payload["_id"].(string)
 	objId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, exceptions.Err_UNAUTHORIZED().SetMessage("UNAUTHORIZED")

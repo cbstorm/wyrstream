@@ -58,3 +58,18 @@ var _ = GetHttpServer().FeedRoute(&HTTPRoute{
 		},
 	},
 })
+
+var _ = GetHttpServer().FeedRoute(&HTTPRoute{
+	Method:   POST,
+	Endpoint: "/auth/user/refresh_token",
+	Handlers: []func(*fiber.Ctx) error{
+		middlewares.BodyRequiredMiddleware,
+		func(c *fiber.Ctx) error {
+			result, err := nats_service.GetNATSService().Request("auth.user.refresh_token", c.BodyRaw())
+			if err != nil {
+				return common.ResponseError(c, err)
+			}
+			return common.ResponseOK(c, result)
+		},
+	},
+})

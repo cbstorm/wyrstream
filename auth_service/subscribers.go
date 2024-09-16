@@ -6,25 +6,33 @@ import (
 )
 
 var _ = nats_service.GetNATSService().AddSubcriber(nats_service.NewSubscriber("auth.user.login", func(m nats_service.IRequestMessage) (interface{}, error) {
-	user_login_input := &dtos.UserLoginInput{}
-	if err := m.JSONParse(user_login_input); err != nil {
+	input := &dtos.UserLoginInput{}
+	if err := m.JSONParse(input); err != nil {
 		return nil, err
 	}
-	return GetAuthService().UserLogin(user_login_input)
+	return GetAuthService().UserLogin(input)
 }))
 
 var _ = nats_service.GetNATSService().AddSubcriber(nats_service.NewSubscriber("auth.user.create_account", func(m nats_service.IRequestMessage) (interface{}, error) {
-	user_create_account_input := &dtos.UserCreateAccountInput{}
-	if err := m.JSONParse(user_create_account_input); err != nil {
+	input := &dtos.UserCreateAccountInput{}
+	if err := m.JSONParse(input); err != nil {
 		return nil, err
 	}
-	return GetAuthService().UserCreateAccount(user_create_account_input)
+	return GetAuthService().UserCreateAccount(input)
 }))
 
 var _ = nats_service.GetNATSService().AddSubcriber(nats_service.NewSubscriber("auth.user.get_me", func(m nats_service.IRequestMessage) (interface{}, error) {
-	user_get_me_input := &dtos.UserGetMeInput{}
-	if err := m.JSONParse(user_get_me_input); err != nil {
+	input := &dtos.UserGetMeInput{}
+	if err := m.JSONParse(input); err != nil {
 		return nil, err
 	}
-	return GetAuthService().UserGetMe(user_get_me_input)
+	return GetAuthService().UserGetMe(input)
+}))
+
+var _ = nats_service.GetNATSService().AddSubcriber(nats_service.NewSubscriber("auth.user.refresh_token", func(m nats_service.IRequestMessage) (interface{}, error) {
+	input := &dtos.UserRefreshTokenInput{}
+	if err := m.JSONParse(input); err != nil {
+		return nil, err
+	}
+	return GetAuthService().UserRefreshToken(input)
 }))

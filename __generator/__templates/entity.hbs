@@ -6,7 +6,6 @@ type {{Case name}}Entity struct {
 
 func New{{Case name}}Entity() *{{Case name}}Entity {
 	{{name}} := &{{Case name}}Entity{}
-	{{name}}.NewId()
-	{{name}}.SetTime()
+	{{name}}.New()
 	return {{name}}
 }
