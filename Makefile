@@ -2,7 +2,6 @@ ifneq (,$(wildcard ./.env))
     include .env
     export
 endif
-CC = go
 CONTROL_SERVICE_DIR = ./control_service
 STREAM_SERVICE_DIR = ./stream_service
 AUTH_SERVICE_DIR = ./auth_service
@@ -16,11 +15,11 @@ all: control-svc stream-svc auth-svc
 
 build: mkdist build-control-svc build-stream-svc build-auth-svc
 build-control-svc:
-	$(CC) build -o $(CONTROL_SVC) $(CONTROL_SERVICE_DIR)
+	go build -o $(CONTROL_SVC) $(CONTROL_SERVICE_DIR)
 build-stream-svc:
-	$(CC) build -o $(STREAM_SVC) $(STREAM_SERVICE_DIR)
+	go build -o $(STREAM_SVC) $(STREAM_SERVICE_DIR)
 build-auth-svc:
-	$(CC) build -o $(AUTH_SVC) $(AUTH_SERVICE_DIR)
+	go build -o $(AUTH_SVC) $(AUTH_SERVICE_DIR)
 control-svc:
 	$(CONTROL_SVC)
 stream-svc:
