@@ -52,6 +52,12 @@ func (svc *StreamService) GetOneStream(input *dtos.GetOneInput, reqCtx *common.R
 func (svc *StreamService) CreateOneStream(input *dtos.CreateOneStreamInput, reqCtx *common.RequestContext) (*entities.StreamEntity, error) {
 	stream := entities.NewStreamEntity()
 	stream.PublisherId = reqCtx.GetObjId()
+	stream.Title = input.Title
+	stream.Description = input.Description
+	stream.GenerateStreamId().GeneratePublishKey().GenerateSubscribeKey()
+	if err := repositories.GetStreamRepository().InsertOne(stream); err != nil {
+		return nil, err
+	}
 	return stream, nil
 }
 

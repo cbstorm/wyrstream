@@ -79,13 +79,13 @@ func (ctx *RequestContext) SetIP(ip string) *RequestContext {
 }
 
 func (ctx *RequestContext) AuthUser() error {
-	payload := ctx.payload
 	if !ctx.is_auth {
 		err := ctx.Auth()
 		if err != nil {
 			return err
 		}
 	}
+	payload := ctx.payload
 	role := payload["role"].(string)
 	if role != enums.USER_ROLE_USER {
 		return exceptions.Err_FORBIDEN().SetMessage("FORBIDEN")
@@ -106,13 +106,13 @@ func (ctx *RequestContext) AuthUser() error {
 }
 
 func (ctx *RequestContext) AuthAdmin() error {
-	payload := ctx.payload
 	if !ctx.is_auth {
 		err := ctx.Auth()
 		if err != nil {
 			return err
 		}
 	}
+	payload := ctx.payload
 	role := payload["role"].(string)
 	if role != enums.USER_ROLE_ADMIN {
 		return exceptions.Err_FORBIDEN().SetMessage("FORBIDEN")
@@ -162,6 +162,10 @@ func (ctx *RequestContext) GetIp() string {
 
 func (ctx *RequestContext) GetRole() string {
 	return ctx.role
+}
+
+func (ctx *RequestContext) GetHttpContext() context.Context {
+	return ctx.http_ctx
 }
 
 func (ctx *RequestContext) GetTZOffset() int {

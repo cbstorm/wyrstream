@@ -32,14 +32,15 @@ mkdist:
 
 clean:
 	rm -rf $(OUT)/*
-	rm -rf go.work
 
 work:
-	$(CC) work init $(CONTROL_SERVICE_DIR) $(STREAM_SERVICE_DIR) $(AUTH_SERVICE_DIR) $(LIB_DIR)
+	go work init $(CONTROL_SERVICE_DIR) $(STREAM_SERVICE_DIR) $(AUTH_SERVICE_DIR) $(LIB_DIR)
 up:
 	docker compose -f docker-compose.dev.yml up -d
 down:
 	docker compose -f docker-compose.dev.yml down
+clean-docker:
+	rm -rf .opt
 mkenv:
 	@echo "MONGODB_URL=\n \
 	MONGODB_DB_NAME=\n \

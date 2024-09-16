@@ -27,5 +27,13 @@ func (d *Database) CreateIndexes() error {
 	}); err != nil {
 		return err
 	}
+	if err := d.CreateIndex(&Index{
+		CollectionName: "streams",
+		Name:           "stream_id_1",
+		Fields:         bson.D{{Key: "stream_id", Value: 1}},
+		Uniq:           true,
+	}); err != nil {
+		return err
+	}
 	return nil
 }
