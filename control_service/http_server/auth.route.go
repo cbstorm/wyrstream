@@ -15,7 +15,7 @@ var _ = GetHttpServer().FeedRoute(&HTTPRoute{
 		middlewares.LoggingMiddleware,
 		middlewares.BodyRequiredMiddleware,
 		func(c *fiber.Ctx) error {
-			result, err := nats_service.GetNATSService().Request("auth.user.login", c.BodyRaw())
+			result, err := nats_service.GetNATSService().Request(nats_service.AUTH_USER_LOGIN, c.BodyRaw())
 			if err != nil {
 				return common.ResponseError(c, err)
 			}
@@ -31,7 +31,7 @@ var _ = GetHttpServer().FeedRoute(&HTTPRoute{
 		middlewares.LoggingMiddleware,
 		middlewares.BodyRequiredMiddleware,
 		func(c *fiber.Ctx) error {
-			result, err := nats_service.GetNATSService().Request("auth.user.create_account", c.BodyRaw())
+			result, err := nats_service.GetNATSService().Request(nats_service.AUTH_USER_CREATE_ACCOUNT, c.BodyRaw())
 			if err != nil {
 				return common.ResponseError(c, err)
 			}
@@ -50,7 +50,7 @@ var _ = GetHttpServer().FeedRoute(&HTTPRoute{
 			input := &dtos.UserGetMeInput{
 				UserId: req_ctx.GetObjId(),
 			}
-			result, err := nats_service.GetNATSService().Request("auth.user.get_me", input)
+			result, err := nats_service.GetNATSService().Request(nats_service.AUTH_USER_GET_ME, input)
 			if err != nil {
 				return common.ResponseError(c, err)
 			}
@@ -65,7 +65,7 @@ var _ = GetHttpServer().FeedRoute(&HTTPRoute{
 	Handlers: []func(*fiber.Ctx) error{
 		middlewares.BodyRequiredMiddleware,
 		func(c *fiber.Ctx) error {
-			result, err := nats_service.GetNATSService().Request("auth.user.refresh_token", c.BodyRaw())
+			result, err := nats_service.GetNATSService().Request(nats_service.AUTH_USER_REFRESH_TOKEN, c.BodyRaw())
 			if err != nil {
 				return common.ResponseError(c, err)
 			}

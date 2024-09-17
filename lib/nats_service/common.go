@@ -32,7 +32,3 @@ type ResponseMessage struct {
 func (m *ResponseMessage) Encode() ([]byte, error) {
 	return json.Marshal(m)
 }
-
-// func (m *ResponseMessage) Decode(out interface{}) error {
-// 	return json.Unmarshal(m.Data, out)
-// }

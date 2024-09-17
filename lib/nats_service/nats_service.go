@@ -98,7 +98,7 @@ func WithTimeout(t time.Duration) RequestOptFunc {
 	}
 }
 
-func (ns *NATS_Service) Request(subj string, data interface{}, opts ...RequestOptFunc) (interface{}, error) {
+func (ns *NATS_Service) Request(subj NATS_Subject, data interface{}, opts ...RequestOptFunc) (interface{}, error) {
 	var bytes_data []byte
 	switch v := data.(type) {
 	case []byte:
@@ -117,7 +117,7 @@ func (ns *NATS_Service) Request(subj string, data interface{}, opts ...RequestOp
 	if o.timeout == 0 {
 		o.timeout = DEFAULT_TIMEOUT
 	}
-	msg, err := ns.nats_client.Request(subj, bytes_data, o.timeout)
+	msg, err := ns.nats_client.Request(string(subj), bytes_data, o.timeout)
 	if err != nil {
 		return nil, err
 	}

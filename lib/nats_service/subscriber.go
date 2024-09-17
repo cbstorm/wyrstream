@@ -41,7 +41,7 @@ type Subscriber struct {
 	subscription_channel chan *nats.Msg // Close when unsubscribe
 }
 
-func NewSubscriber(subj string, handler func(IRequestMessage) (interface{}, error), opts ...SubcriberOptFunc) *Subscriber {
+func NewSubscriber(subj NATS_Subject, handler func(IRequestMessage) (interface{}, error), opts ...SubcriberOptFunc) *Subscriber {
 	op := &SubcriberOpts{}
 	for _, v := range opts {
 		v(op)
@@ -53,7 +53,7 @@ func NewSubscriber(subj string, handler func(IRequestMessage) (interface{}, erro
 	id_str := id.String()
 	return &Subscriber{
 		id:          id_str,
-		subject:     subj,
+		subject:     string(subj),
 		handler:     handler,
 		concurrency: op.concurrency,
 		status:      STOP,

@@ -48,3 +48,13 @@ type UserRefreshTokenOutput struct {
 	NewToken        string `json:"new_token,omitempty"`
 	NewRefreshToken string `json:"new_refresh_token,omitempty"`
 }
+
+type CheckStreamKeyInput struct {
+	StreamId string `json:"stream_id"`
+	Key      string `json:"key"`
+}
+
+type CheckStreamKeyResponse struct {
+	Ok      bool   `json:"ok"`
+	Message string `json:"message"`
+}

@@ -10,6 +10,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/cbstorm/wyrstream/lib/dtos"
+	"github.com/cbstorm/wyrstream/lib/nats_service"
 	"github.com/cbstorm/wyrstream/stream_service/configs"
 	srt "github.com/datarhei/gosrt"
 )
@@ -48,7 +50,7 @@ func (s *Server) Shutdown() {
 func (s *Server) Init() *Server {
 	cfg := configs.GetConfig()
 	s.addr = cfg.ADDR
-	s.app = "/"
+	s.app = "/live"
 	s.channels = make(map[string]srt.PubSub)
 	return s
 }
@@ -113,58 +115,53 @@ func (s *Server) log(who, action, path, message string, client net.Addr) {
 func (s *Server) handleConnect(req srt.ConnRequest) srt.ConnType {
 	var mode srt.ConnType = srt.SUBSCRIBE
 	client := req.RemoteAddr()
+	streamId := req.StreamId()
+	path := streamId
 
-	channel := ""
-
-	if req.Version() == 4 {
+	if strings.HasPrefix(streamId, "publish:") {
 		mode = srt.PUBLISH
-		channel = "/" + client.String()
+		path = strings.TrimPrefix(streamId, "publish:")
+	} else if strings.HasPrefix(streamId, "subscribe:") {
+		path = strings.TrimPrefix(streamId, "subscribe:")
+	}
 
-		req.SetPassphrase(s.passphrase)
-	} else if req.Version() == 5 {
-		streamId := req.StreamId()
-		path := streamId
+	u, err := url.Parse(path)
+	if err != nil {
+		return srt.REJECT
+	}
 
-		if strings.HasPrefix(streamId, "publish:") {
-			mode = srt.PUBLISH
-			path = strings.TrimPrefix(streamId, "publish:")
-		} else if strings.HasPrefix(streamId, "subscribe:") {
-			path = strings.TrimPrefix(streamId, "subscribe:")
-		}
-
-		u, err := url.Parse(path)
-		if err != nil {
+	if req.IsEncrypted() {
+		if err := req.SetPassphrase(s.passphrase); err != nil {
+			s.log("CONNECT", "FORBIDDEN", u.Path, err.Error(), client)
 			return srt.REJECT
 		}
+	}
 
-		if req.IsEncrypted() {
-			if err := req.SetPassphrase(s.passphrase); err != nil {
-				s.log("CONNECT", "FORBIDDEN", u.Path, err.Error(), client)
-				return srt.REJECT
-			}
-		}
+	token := u.Query().Get("token")
+	if len(s.token) != 0 && s.token != token {
+		s.log("CONNECT", "FORBIDDEN", u.Path, "invalid token ("+token+")", client)
+		return srt.REJECT
+	}
 
-		token := u.Query().Get("token")
-		if len(s.token) != 0 && s.token != token {
-			s.log("CONNECT", "FORBIDDEN", u.Path, "invalid token ("+token+")", client)
-			return srt.REJECT
-		}
+	if !strings.HasPrefix(u.Path, s.app) {
+		s.log("CONNECT", "FORBIDDEN", u.Path, "invalid app", client)
+		return srt.REJECT
+	}
 
-		if !strings.HasPrefix(u.Path, s.app) {
-			s.log("CONNECT", "FORBIDDEN", u.Path, "invalid app", client)
-			return srt.REJECT
-		}
+	if len(strings.TrimPrefix(u.Path, s.app)) == 0 {
+		s.log("CONNECT", "INVALID", u.Path, "stream name not provided", client)
+		return srt.REJECT
+	}
 
-		if len(strings.TrimPrefix(u.Path, s.app)) == 0 {
-			s.log("CONNECT", "INVALID", u.Path, "stream name not provided", client)
-			return srt.REJECT
-		}
+	channel := u.Path
+	key := u.Query().Get("key")
 
-		channel = u.Path
-		key := u.Query().Get("key")
-		log.Println("channel", channel)
-		log.Println("key", key)
-	} else {
+	if key == "" {
+		s.log("CONNECT", "UNAUTHORIZE", u.Path, "", client)
+		return srt.REJECT
+	}
+
+	if err := s.onConnect(channel, key, mode); err != nil {
 		return srt.REJECT
 	}
 
@@ -186,25 +183,30 @@ func (s *Server) handleConnect(req srt.ConnRequest) srt.ConnType {
 }
 
 func (s *Server) handlePublish(conn srt.Conn) {
-	channel := ""
 	client := conn.RemoteAddr()
 	if client == nil {
 		conn.Close()
 		return
 	}
+	streamId := conn.StreamId()
+	path := strings.TrimPrefix(streamId, "publish:")
 
-	if conn.Version() == 4 {
-		channel = "/" + client.String()
-	} else if conn.Version() == 5 {
-		streamId := conn.StreamId()
-		path := strings.TrimPrefix(streamId, "publish:")
-
-		channel = path
-	} else {
-		s.log("PUBLISH", "INVALID", channel, "unknown connection version", client)
+	u, err := url.Parse(path)
+	if err != nil {
 		conn.Close()
 		return
 	}
+	channel := u.Path
+	key := u.Query().Get("key")
+	if key == "" {
+		conn.Close()
+		return
+	}
+	if err := s.onPublish(channel, key); err != nil {
+		conn.Close()
+		return
+	}
+	log.Printf("[PUBLISH] channel: %s, key: %s", channel, key)
 
 	s.lock.Lock()
 	pubsub := s.channels[channel]
@@ -212,12 +214,12 @@ func (s *Server) handlePublish(conn srt.Conn) {
 		s.log("PUBLISH", "CONFLICT", channel, "already publishing", client)
 		conn.Close()
 		return
-	} else {
-		pubsub = srt.NewPubSub(srt.PubSubConfig{
-			Logger: s.server.Config.Logger,
-		})
-		s.channels[channel] = pubsub
 	}
+	// Init new pubsub
+	pubsub = srt.NewPubSub(srt.PubSubConfig{
+		Logger: s.server.Config.Logger,
+	})
+	s.channels[channel] = pubsub
 	s.lock.Unlock()
 
 	s.log("PUBLISH", "START", channel, "publishing", client)
@@ -234,25 +236,30 @@ func (s *Server) handlePublish(conn srt.Conn) {
 }
 
 func (s *Server) handleSubscribe(conn srt.Conn) {
-	channel := ""
 	client := conn.RemoteAddr()
 	if client == nil {
 		conn.Close()
 		return
 	}
 
-	if conn.Version() == 4 {
-		channel = client.String()
-	} else if conn.Version() == 5 {
-		streamId := conn.StreamId()
-		path := strings.TrimPrefix(streamId, "subscribe:")
-		channel = path
-	} else {
-		s.log("SUBSCRIBE", "INVALID", channel, "unknown connection version", client)
+	streamId := conn.StreamId()
+	path := strings.TrimPrefix(streamId, "subscribe:")
+	u, err := url.Parse(path)
+	if err != nil {
 		conn.Close()
 		return
 	}
-
+	channel := u.Path
+	key := u.Query().Get("key")
+	if key == "" {
+		conn.Close()
+		return
+	}
+	if err := s.onSubscribe(channel, key); err != nil {
+		conn.Close()
+		return
+	}
+	log.Printf("[SUBSCRIBE] channel: %s, key: %s", channel, key)
 	s.log("SUBSCRIBE", "START", channel, "", client)
 
 	s.lock.RLock()
@@ -272,22 +279,66 @@ func (s *Server) handleSubscribe(conn srt.Conn) {
 	conn.Close()
 }
 
-func (s *Server) onConnect() error {
+func (s *Server) onConnect(stream_id, key string, mode srt.ConnType) error {
+	input := dtos.CheckStreamKeyInput{
+		StreamId: stream_id,
+		Key:      key,
+	}
+	if mode == srt.PUBLISH {
+		res, err := nats_service.GetNATSService().Request(nats_service.AUTH_STREAM_CHECK_PUBLISH_KEY, input)
+		if err != nil {
+			return err
+		}
+		if result, ok := res.(*dtos.CheckStreamKeyResponse); !ok || !result.Ok {
+			return fmt.Errorf("publish key invalid")
+		}
+	}
+	if mode == srt.SUBSCRIBE {
+		res, err := nats_service.GetNATSService().Request(nats_service.AUTH_STREAM_CHECK_SUBSCRIBE_KEY, input)
+		if err != nil {
+			return err
+		}
+		if result, ok := res.(*dtos.CheckStreamKeyResponse); !ok || !result.Ok {
+			return fmt.Errorf("subscribe key invalid")
+		}
+	}
 	return nil
 }
 
-func (s *Server) onPublish() error {
+func (s *Server) onPublish(stream_id, publish_key string) error {
+	input := dtos.CheckStreamKeyInput{
+		StreamId: stream_id,
+		Key:      publish_key,
+	}
+	res, err := nats_service.GetNATSService().Request(nats_service.AUTH_STREAM_CHECK_PUBLISH_KEY, input)
+	if err != nil {
+		return err
+	}
+	if result, ok := res.(*dtos.CheckStreamKeyResponse); !ok || !result.Ok {
+		return fmt.Errorf("publish key invalid")
+	}
 	return nil
 }
 
-func (s *Server) onPublishStop() error {
+func (s *Server) onPublishStop(stream_id string) error {
 	return nil
 }
 
-func (s *Server) onSubscribe() error {
+func (s *Server) onSubscribe(stream_id, subscribe_key string) error {
+	input := dtos.CheckStreamKeyInput{
+		StreamId: stream_id,
+		Key:      subscribe_key,
+	}
+	res, err := nats_service.GetNATSService().Request(nats_service.AUTH_STREAM_CHECK_SUBSCRIBE_KEY, input)
+	if err != nil {
+		return err
+	}
+	if result, ok := res.(*dtos.CheckStreamKeyResponse); !ok || !result.Ok {
+		return fmt.Errorf("subscribe key invalid")
+	}
 	return nil
 }
 
-func (s *Server) onSubscribeStop() error {
+func (s *Server) onSubscribeStop(stream_id string) error {
 	return nil
 }

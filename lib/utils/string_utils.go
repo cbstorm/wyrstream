@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"encoding/base64"
+	"fmt"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -123,4 +125,21 @@ func StringRand(l int) string {
 		k++
 	}
 	return string(result)
+}
+
+func Base64Encode(inp string) string {
+	data := []byte(inp)
+	dst := make([]byte, base64.StdEncoding.EncodedLen(len(data)))
+	base64.StdEncoding.Encode(dst, data)
+	return string(dst)
+}
+
+func Base64Decode(inp string) (string, error) {
+	dst := make([]byte, base64.StdEncoding.DecodedLen(len(inp)))
+	n, err := base64.StdEncoding.Decode(dst, []byte(inp))
+	if err != nil {
+		return "", err
+	}
+	dst = dst[:n]
+	return fmt.Sprintf("%q\n", dst), nil
 }
