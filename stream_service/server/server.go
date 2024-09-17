@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"log"
 	"net"
 	"net/url"
 	"os"
@@ -160,6 +161,9 @@ func (s *Server) handleConnect(req srt.ConnRequest) srt.ConnType {
 		}
 
 		channel = u.Path
+		key := u.Query().Get("key")
+		log.Println("channel", channel)
+		log.Println("key", key)
 	} else {
 		return srt.REJECT
 	}
@@ -204,21 +208,17 @@ func (s *Server) handlePublish(conn srt.Conn) {
 
 	s.lock.Lock()
 	pubsub := s.channels[channel]
-	if pubsub == nil {
+	if pubsub != nil {
+		s.log("PUBLISH", "CONFLICT", channel, "already publishing", client)
+		conn.Close()
+		return
+	} else {
 		pubsub = srt.NewPubSub(srt.PubSubConfig{
 			Logger: s.server.Config.Logger,
 		})
 		s.channels[channel] = pubsub
-	} else {
-		pubsub = nil
 	}
 	s.lock.Unlock()
-
-	if pubsub == nil {
-		s.log("PUBLISH", "CONFLICT", channel, "already publishing", client)
-		conn.Close()
-		return
-	}
 
 	s.log("PUBLISH", "START", channel, "publishing", client)
 
@@ -246,7 +246,6 @@ func (s *Server) handleSubscribe(conn srt.Conn) {
 	} else if conn.Version() == 5 {
 		streamId := conn.StreamId()
 		path := strings.TrimPrefix(streamId, "subscribe:")
-
 		channel = path
 	} else {
 		s.log("SUBSCRIBE", "INVALID", channel, "unknown connection version", client)
@@ -256,7 +255,6 @@ func (s *Server) handleSubscribe(conn srt.Conn) {
 
 	s.log("SUBSCRIBE", "START", channel, "", client)
 
-	// Look for the stream
 	s.lock.RLock()
 	pubsub := s.channels[channel]
 	s.lock.RUnlock()

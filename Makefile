@@ -82,7 +82,7 @@ publish:
 	-stream_loop -1 \
 	-i tmp/vid_0.mp4 \
     -maxrate:v 4096k \
-    -bufsize:v 1316 \
+    -bufsize:v 1024k \
     -preset ultrafast \
-	-f mpegts "srt://127.0.0.1:6000?streamid=publish:/live/stream"
+	-f mpegts "srt://127.0.0.1:6000?streamid=publish:/live/STR66E95B8E2?key=vf5ISSbAo20E4pjgJnuAHWQvggtGtF"
 
