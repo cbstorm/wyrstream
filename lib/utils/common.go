@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"encoding/gob"
 	"encoding/hex"
+	"encoding/json"
 	"math"
 	"net/mail"
 
@@ -87,4 +88,12 @@ func Encode(p interface{}) ([]byte, error) {
 	enc := gob.NewEncoder(&buf)
 	err := enc.Encode(p)
 	return buf.Bytes(), err
+}
+
+func Cast(s interface{}, d interface{}) error {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(b, d)
 }

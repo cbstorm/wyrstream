@@ -75,14 +75,18 @@ dto:
 	npx plop dto
 module:
 	npx plop module
-publish:
+test-pub:
 	ffmpeg \
 	-v error \
 	-re \
 	-stream_loop -1 \
 	-i tmp/vid_0.mp4 \
-    -maxrate:v 4096k \
-    -bufsize:v 1024k \
+	-c:v libx264 \
+	-b:v 2M \
+    -maxrate:v 2M \
+    -bufsize:v 1M \
     -preset ultrafast \
 	-f mpegts "srt://127.0.0.1:6000?streamid=publish:/live/STR66E95B8E2?key=vf5ISSbAo20E4pjgJnuAHWQvggtGtF"
+test-sub:
+	ffplay -v quiet -f mpegts -transtype live -i "srt://127.0.0.1:6000?streamid=/live/STR66E95B8E2?key=0MRWUlRLHSViEddcmOtKLMDYann1st"
 

@@ -49,7 +49,7 @@ func (s *Server) Shutdown() {
 func (s *Server) Init() *Server {
 	cfg := configs.GetConfig()
 	s.addr = cfg.ADDR
-	s.app = "/live"
+	s.app = "/live/"
 	s.channels = make(map[string]srt.PubSub)
 	return s
 }
@@ -153,14 +153,14 @@ func (s *Server) handleConnect(req srt.ConnRequest) srt.ConnType {
 	}
 
 	channel := u.Path
+	stream_id := strings.TrimPrefix(channel, s.app)
 	key := u.Query().Get("key")
-
 	if key == "" {
 		s.log("CONNECT", "UNAUTHORIZE", u.Path, "", client)
 		return srt.REJECT
 	}
 
-	if err := s.onConnect(channel, key, mode); err != nil {
+	if err := s.onConnect(stream_id, key, mode); err != nil {
 		return srt.REJECT
 	}
 
@@ -196,12 +196,13 @@ func (s *Server) handlePublish(conn srt.Conn) {
 		return
 	}
 	channel := u.Path
+	stream_id := strings.TrimPrefix(channel, s.app)
 	key := u.Query().Get("key")
 	if key == "" {
 		conn.Close()
 		return
 	}
-	if err := s.onPublish(channel, key); err != nil {
+	if err := s.onPublish(stream_id, key); err != nil {
 		s.log("PUBLISH", "ON_PUBLISH_ERROR", channel, "", client)
 		conn.Close()
 		return
@@ -221,7 +222,7 @@ func (s *Server) handlePublish(conn srt.Conn) {
 	s.channels[channel] = pubsub
 	s.lock.Unlock()
 
-	if err := s.onPublishStart(channel); err != nil {
+	if err := s.onPublishStart(stream_id); err != nil {
 		s.log("PUBLISH", "ON_PUBLISH_START_ERROR", channel, "", client)
 	}
 	s.log("PUBLISH", "START", channel, "publishing", client)
@@ -235,7 +236,7 @@ func (s *Server) handlePublish(conn srt.Conn) {
 	s.log("PUBLISH", "STOP", channel, "", client)
 
 	conn.Close()
-	if err := s.onPublishStop(channel); err != nil {
+	if err := s.onPublishStop(stream_id); err != nil {
 		s.log("PUBLISH", "ON_PUBLISH_STOP_ERR", channel, "", client)
 	}
 }
@@ -255,12 +256,13 @@ func (s *Server) handleSubscribe(conn srt.Conn) {
 		return
 	}
 	channel := u.Path
+	stream_id := strings.TrimPrefix(channel, s.app)
 	key := u.Query().Get("key")
 	if key == "" {
 		conn.Close()
 		return
 	}
-	if err := s.onSubscribe(channel, key); err != nil {
+	if err := s.onSubscribe(stream_id, key); err != nil {
 		s.log("SUBSCRIBE", "ON_SUBSCRIBE_ERROR", channel, "", client)
 		conn.Close()
 		return
@@ -298,11 +300,12 @@ func (s *Server) onPublish(stream_id, publish_key string) error {
 		StreamId: stream_id,
 		Key:      publish_key,
 	}
-	res, err := nats_service.GetNATSService().Request(nats_service.AUTH_STREAM_CHECK_PUBLISH_KEY, input)
+	result := &dtos.CheckStreamKeyResponse{}
+	_, err := nats_service.GetNATSService().Request(nats_service.AUTH_STREAM_CHECK_PUBLISH_KEY, input, nats_service.WithOutput(result))
 	if err != nil {
 		return err
 	}
-	if result, ok := res.(*dtos.CheckStreamKeyResponse); !ok || !result.Ok {
+	if !result.Ok {
 		return fmt.Errorf("publish key invalid")
 	}
 	return nil
@@ -324,11 +327,12 @@ func (s *Server) onSubscribe(stream_id, subscribe_key string) error {
 		StreamId: stream_id,
 		Key:      subscribe_key,
 	}
-	res, err := nats_service.GetNATSService().Request(nats_service.AUTH_STREAM_CHECK_SUBSCRIBE_KEY, input)
+	result := &dtos.CheckStreamKeyResponse{}
+	_, err := nats_service.GetNATSService().Request(nats_service.AUTH_STREAM_CHECK_SUBSCRIBE_KEY, input, nats_service.WithOutput(result))
 	if err != nil {
 		return err
 	}
-	if result, ok := res.(*dtos.CheckStreamKeyResponse); !ok || !result.Ok {
+	if !result.Ok {
 		return fmt.Errorf("subscribe key invalid")
 	}
 	return nil

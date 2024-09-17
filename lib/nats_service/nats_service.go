@@ -9,6 +9,7 @@ import (
 	"github.com/cbstorm/wyrstream/lib/configs"
 	"github.com/cbstorm/wyrstream/lib/exceptions"
 	"github.com/cbstorm/wyrstream/lib/logger"
+	"github.com/cbstorm/wyrstream/lib/utils"
 	"github.com/nats-io/nats.go"
 )
 
@@ -88,6 +89,7 @@ func (ns *NATS_Service) StartAllSubscriber() error {
 
 type RequestOpts struct {
 	timeout time.Duration
+	output  interface{}
 }
 
 type RequestOptFunc func(*RequestOpts)
@@ -95,6 +97,12 @@ type RequestOptFunc func(*RequestOpts)
 func WithTimeout(t time.Duration) RequestOptFunc {
 	return func(ro *RequestOpts) {
 		ro.timeout = t
+	}
+}
+
+func WithOutput(o interface{}) RequestOptFunc {
+	return func(ro *RequestOpts) {
+		ro.output = o
 	}
 }
 
@@ -129,6 +137,11 @@ func (ns *NATS_Service) Request(subj NATS_Subject, data interface{}, opts ...Req
 		err, _ := res.Error.(map[string]interface{})
 		e := exceptions.NewException(err["name"].(string)).SetMessage(err["message"].(string)).SetStatus(int(err["status"].(float64)))
 		return nil, e
+	}
+	if o.output != nil {
+		if err := utils.Cast(res.Data, o.output); err != nil {
+			return nil, err
+		}
 	}
 	return res.Data, nil
 }
