@@ -59,6 +59,10 @@ mkenv:
 	REDIS_KEY_PREFIX=\n \
 	> .env
 setup: mkenv
+test:
+	cd lib && go test ./... && cd ..
+	cd auth_service && go test ./... && cd ..
+	cd control_service && go test ./... && cd ..
 route:
 	npx plop route
 entity:
@@ -71,4 +75,14 @@ dto:
 	npx plop dto
 module:
 	npx plop module
+publish:
+	ffmpeg \
+	-v error \
+	-re \
+	-stream_loop -1 \
+	-i tmp/vid_0.mp4 \
+    -maxrate:v 4096k \
+    -bufsize:v 1316 \
+    -preset ultrafast \
+	-f mpegts "srt://127.0.0.1:6000?streamid=publish:/live/stream"
 

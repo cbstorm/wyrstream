@@ -1,8 +1,6 @@
 package entities
 
 import (
-	"crypto/rand"
-	"encoding/base64"
 	"fmt"
 	"strings"
 	"time"
@@ -37,23 +35,11 @@ func (e *StreamEntity) GenerateStreamId() *StreamEntity {
 }
 
 func (e *StreamEntity) GeneratePublishKey() *StreamEntity {
-	buf := make([]byte, 256)
-	rand, _ := rand.Read(buf)
-	rand_hex := fmt.Sprintf("%x", rand)
-	data := []byte(e.PublisherId.Hex() + e.StreamId + rand_hex)
-	dst := make([]byte, base64.StdEncoding.EncodedLen(len(data)))
-	base64.StdEncoding.Encode(dst, data)
-	e.PublishKey = strings.ToUpper(string(dst))
+	e.PublishKey = utils.StringRand(30)
 	return e
 }
 
 func (e *StreamEntity) GenerateSubscribeKey() *StreamEntity {
-	buf := make([]byte, 512)
-	rand, _ := rand.Read(buf)
-	rand_hex := fmt.Sprintf("%x", rand)
-	data := []byte(e.Id.Hex() + e.PublisherId.Hex() + e.StreamId + rand_hex)
-	dst := make([]byte, base64.StdEncoding.EncodedLen(len(data)))
-	base64.StdEncoding.Encode(dst, data)
-	e.SubscribeKey = strings.ToUpper(string(dst))
+	e.SubscribeKey = utils.StringRand(30)
 	return e
 }

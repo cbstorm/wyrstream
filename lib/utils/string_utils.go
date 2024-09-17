@@ -11,6 +11,25 @@ import (
 	"golang.org/x/text/unicode/norm"
 )
 
+var ASCII = make([]byte, 0)
+
+func GetAsciiBytes() []byte {
+	if len(ASCII) == 0 {
+		bytes := make([]byte, 0)
+		for i := 48; i < 58; i++ {
+			bytes = append(bytes, byte(i))
+		}
+		for i := 65; i <= 90; i++ {
+			bytes = append(bytes, byte(i))
+		}
+		for i := 97; i <= 122; i++ {
+			bytes = append(bytes, byte(i))
+		}
+		ASCII = bytes
+	}
+	return ASCII
+}
+
 func DefaultString(val string, defaultVal string) string {
 	if val != "" {
 		return val
@@ -89,4 +108,19 @@ func ContainPattern(source string, target string) bool {
 		}
 	}
 	return false
+}
+
+func StringRand(l int) string {
+	bytes := GetAsciiBytes()
+	result := make([]byte, l)
+	k := 0
+	for {
+		if k >= l {
+			break
+		}
+		r := RandomRange(0, len(bytes)-1)
+		result[k] = bytes[r]
+		k++
+	}
+	return string(result)
 }

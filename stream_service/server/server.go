@@ -143,14 +143,12 @@ func (s *Server) handleConnect(req srt.ConnRequest) srt.ConnType {
 			}
 		}
 
-		// Check the token
 		token := u.Query().Get("token")
 		if len(s.token) != 0 && s.token != token {
 			s.log("CONNECT", "FORBIDDEN", u.Path, "invalid token ("+token+")", client)
 			return srt.REJECT
 		}
 
-		// Check the app patch
 		if !strings.HasPrefix(u.Path, s.app) {
 			s.log("CONNECT", "FORBIDDEN", u.Path, "invalid app", client)
 			return srt.REJECT
@@ -204,7 +202,6 @@ func (s *Server) handlePublish(conn srt.Conn) {
 		return
 	}
 
-	// Look for the stream
 	s.lock.Lock()
 	pubsub := s.channels[channel]
 	if pubsub == nil {
@@ -232,11 +229,6 @@ func (s *Server) handlePublish(conn srt.Conn) {
 	s.lock.Unlock()
 
 	s.log("PUBLISH", "STOP", channel, "", client)
-
-	stats := &srt.Statistics{}
-	conn.Stats(stats)
-
-	fmt.Fprintf(os.Stderr, "%+v\n", stats)
 
 	conn.Close()
 }
@@ -279,10 +271,25 @@ func (s *Server) handleSubscribe(conn srt.Conn) {
 
 	s.log("SUBSCRIBE", "STOP", channel, "", client)
 
-	stats := &srt.Statistics{}
-	conn.Stats(stats)
-
-	fmt.Fprintf(os.Stderr, "%+v\n", stats)
-
 	conn.Close()
+}
+
+func (s *Server) onConnect() error {
+	return nil
+}
+
+func (s *Server) onPublish() error {
+	return nil
+}
+
+func (s *Server) onPublishStop() error {
+	return nil
+}
+
+func (s *Server) onSubscribe() error {
+	return nil
+}
+
+func (s *Server) onSubscribeStop() error {
+	return nil
 }
