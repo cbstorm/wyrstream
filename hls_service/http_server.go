@@ -48,7 +48,7 @@ func (a *HttpServer) Init() *HttpServer {
 		},
 		BodyLimit: 5 * 1024 * 1024,
 	})
-	app.Static("/", "./public")
+	app.Static("/", "public")
 	app.Use(recover.New())
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "*",

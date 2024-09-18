@@ -18,7 +18,9 @@ type StreamEntity struct {
 	PublishKey   string             `bson:"publish_key" json:"-"`
 	SubscribeKey string             `bson:"subscribe_key" json:"-"`
 	IsPublishing bool               `bson:"is_publishing" json:"is_publishing"`
-	HlsUrl       string             `bson:"hls_url" json:"hls_url"`
+	PublishedAt  time.Time          `bson:"published_at" json:"published_at"`
+	StoppedAt    time.Time          `bson:"stopped_at" json:"stopped_at"`
+	HLSUrl       string             `bson:"hls_url" json:"hls_url"`
 }
 
 func NewStreamEntity() *StreamEntity {

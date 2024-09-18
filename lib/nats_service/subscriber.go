@@ -61,6 +61,10 @@ func NewSubscriber(subj NATS_Subject, handler func(IRequestMessage) (interface{}
 	}
 }
 
+func (s *Subscriber) GetId() string {
+	return s.id
+}
+
 func (s *Subscriber) SetSubject(subj string) *Subscriber {
 	s.subject = subj
 	return s
@@ -85,6 +89,8 @@ func (s *Subscriber) Start(nc *nats.Conn, queue_group string) error {
 		s.logger.Error("Could not start subscibe with error: %v", err)
 		return err
 	}
+	s.status = START
+	s.logger.Info("Started")
 	for v := range sub_ch {
 		go func(msg *nats.Msg) {
 			limit_ch <- true
@@ -105,8 +111,6 @@ func (s *Subscriber) Start(nc *nats.Conn, queue_group string) error {
 			}
 		}(v)
 	}
-	s.status = START
-	s.logger.Info("Started")
 	return nil
 }
 

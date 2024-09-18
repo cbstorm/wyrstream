@@ -35,6 +35,7 @@ mkdist:
 
 clean:
 	rm -rf $(OUT)/*
+	rm -rf $(HLS_SERVICE_DIR)/public/*
 
 work:
 	rm -rf go.work
@@ -55,6 +56,7 @@ mkenv:
 	@echo "MONGODB_URL=\n \
 	MONGODB_DB_NAME=\n \
 	ADDR=\n \
+	PUBLIC_URL=\n \
 	NATS_CORE_USERNAME=\n \
 	NATS_CORE_PASSWORD=\n \
 	NATS_CORE_HOST=\n \
@@ -62,6 +64,9 @@ mkenv:
 	NATS_CORE_QUEUE_GROUP=\n \
 	HTTP_HOST=\n \
 	HTTP_PORT=\n \
+	HLS_HTTP_HOST=\n \
+	HLS_HTTP_PORT=\n \
+	HLS_PUBLIC_URL=\n \
 	REDIS_USERNAME=\n \
 	REDIS_PASSWORD=\n \
 	REDIS_HOST=\n \
@@ -100,4 +105,23 @@ test-pub:
 	-f mpegts "srt://127.0.0.1:6000?streamid=publish:/live/STR66E95B8E2?key=vf5ISSbAo20E4pjgJnuAHWQvggtGtF"
 test-sub:
 	ffplay -v quiet -f mpegts -transtype live -i "srt://127.0.0.1:6000?streamid=/live/STR66E95B8E2?key=0MRWUlRLHSViEddcmOtKLMDYann1st"
+test-play-hls:
+	ffplay -i "http://127.0.0.1:10000/STR66E95B8E2/playlist.m3u8"
+test-hls:
+	ffmpeg \
+	-i srt://127.0.0.1:6000?streamid=/live/STR66E95B8E2?key=0MRWUlRLHSViEddcmOtKLMDYann1st \
+	-c:v libx264 \
+	-c:a aac \
+	-b:a 160k \
+	-b:v 2M \
+	-maxrate:v 2M \
+	-bufsize 1M \
+	-crf 18 \
+	-preset ultrafast \
+	-f hls \
+	-hls_time 6 \
+	-hls_list_size 6 \
+	-hls_segment_filename hls_service/public/STR66E95B8E2/seg-%05d.ts \
+	-start_number 1 \
+	hls_service/public/STR66E95B8E2/playlist.m3u8
 

@@ -80,11 +80,27 @@ func (ns *NATS_Service) AddSubcriber(s *Subscriber) bool {
 	return true
 }
 
+func (ns *NATS_Service) Start(subscriber_id string) {
+	s := ns.subscribers[subscriber_id]
+	if s == nil {
+		return
+	}
+	go s.Start(ns.nats_client, ns.queue_group)
+}
+
 func (ns *NATS_Service) StartAllSubscriber() error {
 	for _, s := range ns.subscribers {
 		go s.Start(ns.nats_client, ns.queue_group)
 	}
 	return nil
+}
+
+func (ns *NATS_Service) StopSubscribe(subscriber_id string) error {
+	s := ns.subscribers[subscriber_id]
+	if s == nil {
+		return nil
+	}
+	return s.Stop()
 }
 
 type RequestOpts struct {

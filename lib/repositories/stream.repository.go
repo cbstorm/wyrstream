@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"sync"
+	"time"
 
 	"github.com/cbstorm/wyrstream/lib/database"
 	"github.com/cbstorm/wyrstream/lib/entities"
@@ -40,5 +41,24 @@ func (r *StreamRepository) FindOneByStreamIdAndSubscribeKey(stream_id, subscribe
 	return r.FindOne(map[string]interface{}{
 		"stream_id":     stream_id,
 		"subscribe_key": subscribe_key,
+	}, out, opts...)
+}
+
+func (r *StreamRepository) UpdatePublishStartByStreamId(stream_id string, hls_url string, out *entities.StreamEntity, opts ...CURDOptionFunc) error {
+	return r.UpdateOne(map[string]interface{}{
+		"stream_id": stream_id,
+	}, map[string]interface{}{
+		"is_publishing": true,
+		"published_at":  time.Now().UTC(),
+		"hls_url":       hls_url,
+	}, out, opts...)
+}
+
+func (r *StreamRepository) UpdatePublishStopByStreamId(stream_id string, out *entities.StreamEntity, opts ...CURDOptionFunc) error {
+	return r.UpdateOne(map[string]interface{}{
+		"stream_id": stream_id,
+	}, map[string]interface{}{
+		"is_publishing": false,
+		"stopped_at":    time.Now().UTC(),
 	}, out, opts...)
 }

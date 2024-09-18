@@ -6,3 +6,4 @@ dist
 **/__debug*
 tmp
 **/go.sum
+hls_service/public/*

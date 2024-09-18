@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"log"
 	"net"
 	"net/url"
 	"os"
@@ -29,6 +30,7 @@ func GetServer() *Server {
 
 type Server struct {
 	addr       string
+	public_url string
 	app        string
 	token      string
 	passphrase string
@@ -49,6 +51,7 @@ func (s *Server) Shutdown() {
 func (s *Server) Init() *Server {
 	cfg := configs.GetConfig()
 	s.addr = cfg.ADDR
+	s.public_url = cfg.PUBLIC_URL
 	s.app = "/live/"
 	s.channels = make(map[string]srt.PubSub)
 	return s
@@ -222,8 +225,11 @@ func (s *Server) handlePublish(conn srt.Conn) {
 	s.channels[channel] = pubsub
 	s.lock.Unlock()
 
+	// Emit START event
 	if err := s.onPublishStart(stream_id); err != nil {
-		s.log("PUBLISH", "ON_PUBLISH_START_ERROR", channel, "", client)
+		s.log("PUBLISH", "EMIT_START_EVENT", channel, "publishing", client)
+		conn.Close()
+		return
 	}
 	s.log("PUBLISH", "START", channel, "publishing", client)
 
@@ -236,9 +242,8 @@ func (s *Server) handlePublish(conn srt.Conn) {
 	s.log("PUBLISH", "STOP", channel, "", client)
 
 	conn.Close()
-	if err := s.onPublishStop(stream_id); err != nil {
-		s.log("PUBLISH", "ON_PUBLISH_STOP_ERR", channel, "", client)
-	}
+	// Emit stop event
+	s.onPublishStop(stream_id)
 }
 
 func (s *Server) handleSubscribe(conn srt.Conn) {
@@ -312,14 +317,26 @@ func (s *Server) onPublish(stream_id, publish_key string) error {
 }
 
 func (s *Server) onPublishStart(stream_id string) error {
-	fmt.Println(stream_id)
-	return nil
+	input := &dtos.HLSPublishStartInput{
+		StreamId:        stream_id,
+		StreamServer:    s.public_url,
+		StreamServerApp: s.app,
+	}
+	_, err := nats_service.GetNATSService().Request(nats_service.HLS_PUBLISH_START, input)
+	if err != nil {
+		return err
+	}
+	return err
 }
 
-func (s *Server) onPublishStop(stream_id string) error {
-	fmt.Println(stream_id)
-
-	return nil
+func (s *Server) onPublishStop(stream_id string) {
+	input := &dtos.HLSPublishStopInput{
+		StreamId: stream_id,
+	}
+	_, err := nats_service.GetNATSService().Request(nats_service.HLS_PUBLISH_STOP.Concat(input.StreamId), input)
+	if err != nil {
+		log.Printf("Could not emit publish stop event of stream %s with err: %v", stream_id, err)
+	}
 }
 
 func (s *Server) onSubscribe(stream_id, subscribe_key string) error {
@@ -336,4 +353,8 @@ func (s *Server) onSubscribe(stream_id, subscribe_key string) error {
 		return fmt.Errorf("subscribe key invalid")
 	}
 	return nil
+}
+
+func (s *Server) BuildStreamSubscribeUrl(stream_id string, key string) string {
+	return fmt.Sprintf("srt://%s?streamid=%s%s?key=%s", s.public_url, s.app, stream_id, key)
 }
