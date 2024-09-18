@@ -1,8 +1,9 @@
-go 1.21.4
+go 1.22.2
 
 use (
 	./auth_service
 	./control_service
+	./hls_service
 	./lib
 	./stream_service
 )
