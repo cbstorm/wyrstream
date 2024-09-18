@@ -15,5 +15,7 @@ const (
 	AUTH_STREAM_CHECK_SUBSCRIBE_KEY NATS_Subject = "auth.stream.check_subscribe_key"
 )
 
-// stream.auth.check_publish_key
-// stream.auth.check_subscribe_key
+const (
+	HLS_PUBLISH_START NATS_Subject = "hls.publish.start"
+	HLS_PUBLISH_STOP  NATS_Subject = "hls.publish.stop"
+)

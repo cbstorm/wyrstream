@@ -5,3 +5,4 @@ dist
 **/*.exe
 **/__debug*
 tmp
+**/go.sum
