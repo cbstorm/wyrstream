@@ -10,7 +10,7 @@ import (
 
 func main() {
 	logg := logger.NewLogger("HLS_SERVICE")
-	if err := utils.AssertDir("public/"); err != nil {
+	if err := utils.AssertDir(PUBLIC_DIR + "/"); err != nil {
 		logg.Fatal("Could not assert dir [./public] with err: %v", err)
 	}
 	if err := GetConfig().Load(); err != nil {
