@@ -23,7 +23,7 @@ build-stream-svc:
 build-auth-svc:
 	go build -o $(AUTH_SVC) $(AUTH_SERVICE_DIR)
 build-hls-svc:
-	go build -o $(HLS_SVC) $(HLS_SERVICE_DIR)
+	go build -o $(AUTH_SVC) $(HLS_SERVICE_DIR)
 control-svc:
 	$(CONTROL_SVC)
 stream-svc:
@@ -36,10 +36,17 @@ mkdist:
 
 clean:
 	rm -rf $(OUT)/*
+	rm -rf $(HLS_SERVICE_DIR)/public/*
 
 work:
-	rm -rf go.work 
+	rm -rf go.work
 	go work init $(CONTROL_SERVICE_DIR) $(STREAM_SERVICE_DIR) $(AUTH_SERVICE_DIR) $(LIB_DIR) $(HLS_SERVICE_DIR)
+	go work sync
+deps:
+	cd $(LIB_DIR) && go mod tidy && cd ..
+	cd $(AUTH_SERVICE_DIR) && go mod tidy && cd ..
+	cd $(CONTROL_SERVICE_DIR) && go mod tidy && cd ..
+	cd $(STREAM_SERVICE_DIR) && go mod tidy && cd ..
 up:
 	docker compose -f docker-compose.dev.yml up -d
 down:
@@ -50,6 +57,7 @@ mkenv:
 	@echo "MONGODB_URL=\n \
 	MONGODB_DB_NAME=\n \
 	ADDR=\n \
+	PUBLIC_URL=\n \
 	NATS_CORE_USERNAME=\n \
 	NATS_CORE_PASSWORD=\n \
 	NATS_CORE_HOST=\n \
@@ -59,6 +67,7 @@ mkenv:
 	HTTP_PORT=\n \
 	HLS_HTTP_HOST=\n \
 	HLS_HTTP_PORT=\n \
+	HLS_PUBLIC_URL=\n \
 	REDIS_USERNAME=\n \
 	REDIS_PASSWORD=\n \
 	REDIS_HOST=\n \
@@ -67,9 +76,10 @@ mkenv:
 	> .env
 setup: mkenv
 test:
-	cd lib && go test ./... && cd ..
-	cd auth_service && go test ./... && cd ..
-	cd control_service && go test ./... && cd ..
+	cd $(LIB_DIR) && go test ./... && cd ..
+	cd $(AUTH_SERVICE_DIR) && go test ./... && cd ..
+	cd $(CONTROL_SERVICE_DIR) && go test ./... && cd ..
+	cd $(STREAM_SERVICE_DIR) && go test ./... && cd ..
 route:
 	npx plop route
 entity:
@@ -96,4 +106,23 @@ test-pub:
 	-f mpegts "srt://127.0.0.1:6000?streamid=publish:/live/STR66E95B8E2?key=vf5ISSbAo20E4pjgJnuAHWQvggtGtF"
 test-sub:
 	ffplay -v quiet -f mpegts -transtype live -i "srt://127.0.0.1:6000?streamid=/live/STR66E95B8E2?key=0MRWUlRLHSViEddcmOtKLMDYann1st"
+test-play-hls:
+	ffplay -i "http://127.0.0.1:10000/STR66E95B8E2/playlist.m3u8"
+test-hls:
+	ffmpeg \
+	-i srt://127.0.0.1:6000?streamid=/live/STR66E95B8E2?key=0MRWUlRLHSViEddcmOtKLMDYann1st \
+	-c:v libx264 \
+	-c:a aac \
+	-b:a 160k \
+	-b:v 2M \
+	-maxrate:v 2M \
+	-bufsize 1M \
+	-crf 18 \
+	-preset ultrafast \
+	-f hls \
+	-hls_time 6 \
+	-hls_list_size 6 \
+	-hls_segment_filename hls_service/public/STR66E95B8E2/seg-%05d.ts \
+	-start_number 1 \
+	hls_service/public/STR66E95B8E2/playlist.m3u8
 

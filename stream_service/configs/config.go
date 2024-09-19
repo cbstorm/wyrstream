@@ -23,11 +23,13 @@ func GetConfig() *Config {
 }
 
 type Config struct {
-	logger *logger.Logger
-	ADDR   string
+	logger     *logger.Logger
+	ADDR       string
+	PUBLIC_URL string
 }
 
 func (c *Config) Load() error {
 	c.ADDR = os.Getenv("ADDR")
+	c.PUBLIC_URL = os.Getenv("PUBLIC_URL")
 	return nil
 }

@@ -24,9 +24,10 @@ func GetConfig() *Config {
 }
 
 type Config struct {
-	logger        *logger.Logger
-	HLS_HTTP_HOST string
-	HLS_HTTP_PORT uint16
+	logger         *logger.Logger
+	HLS_PUBLIC_URL string
+	HLS_HTTP_HOST  string
+	HLS_HTTP_PORT  uint16
 }
 
 func (c *Config) Load() error {
@@ -37,5 +38,6 @@ func (c *Config) Load() error {
 		return err
 	}
 	c.HLS_HTTP_PORT = uint16(port)
+	c.HLS_PUBLIC_URL = os.Getenv("HLS_PUBLIC_URL")
 	return nil
 }

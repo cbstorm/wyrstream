@@ -1,6 +1,6 @@
 module github.com/cbstorm/wyrstream/hls_service
 
-go 1.21.4
+go 1.23.1
 
 require github.com/gofiber/fiber/v2 v2.52.5
 

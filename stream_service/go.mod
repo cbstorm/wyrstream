@@ -1,6 +1,8 @@
 module github.com/cbstorm/wyrstream/stream_service
 
-go 1.21.4
+go 1.23.1
+
+require github.com/datarhei/gosrt v0.7.0
 
 require github.com/datarhei/gosrt v0.7.0
 

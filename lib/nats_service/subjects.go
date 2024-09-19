@@ -16,6 +16,10 @@ const (
 )
 
 const (
-	HLS_GEN_START NATS_Subject = "hls.gen.start"
-	HLS_GEN_STOP  NATS_Subject = "hls.gen.stop"
+	HLS_PUBLISH_START NATS_Subject = "hls.publish.start"
+	HLS_PUBLISH_STOP  NATS_Subject = "hls.publish.stop"
 )
+
+func (s NATS_Subject) Concat(e string) NATS_Subject {
+	return NATS_Subject(string(s) + "." + e)
+}
