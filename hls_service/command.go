@@ -5,10 +5,47 @@ import (
 	"fmt"
 	"io"
 	"os/exec"
-	"strings"
+	"sync"
 
 	"github.com/cbstorm/wyrstream/lib/logger"
 )
+
+var process_hls_cmd_store *ProcessHLSCommandStore
+var process_hls_cmd_store_sync sync.Once
+
+func GetProcessCommandStore() *ProcessHLSCommandStore {
+	if process_hls_cmd_store == nil {
+		process_hls_cmd_store_sync.Do(func() {
+			process_hls_cmd_store = &ProcessHLSCommandStore{
+				commands: make(map[string]*ProcessHLSCommand),
+			}
+		})
+	}
+	return process_hls_cmd_store
+}
+
+type ProcessHLSCommandStore struct {
+	commands map[string]*ProcessHLSCommand
+	mu       sync.Mutex
+}
+
+func (s *ProcessHLSCommandStore) Add(c *ProcessHLSCommand) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.commands[c.stream_id] = c
+}
+
+func (s *ProcessHLSCommandStore) Get(stream_id string) *ProcessHLSCommand {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.commands[stream_id]
+}
+
+func (s *ProcessHLSCommandStore) Remove(stream_id string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	delete(s.commands, stream_id)
+}
 
 type ProcessHLSCommand struct {
 	ctx       context.Context
@@ -30,6 +67,7 @@ func NewProcessHLSCommand(stream_id string) *ProcessHLSCommand {
 		logger:    logger.NewLogger(fmt.Sprintf("PROCESS_HLS_CMD - %s", stream_id)),
 		name:      "ffmpeg",
 		args: []string{
+			"-v", "error",
 			"-c:v", "libx264",
 			"-c:a", "aac",
 			"-b:a", "160k",
@@ -41,7 +79,7 @@ func NewProcessHLSCommand(stream_id string) *ProcessHLSCommand {
 			"-f", "hls",
 			"-hls_time", "6",
 			"-hls_list_size", "6",
-			"-hls_segment_filename", "public/" + stream_id + "/seg-%05d.ts",
+			"-hls_segment_filename", BuildHLSSegmentFile(stream_id),
 		},
 	}
 }
@@ -51,8 +89,8 @@ func (c *ProcessHLSCommand) SetInput(i string) *ProcessHLSCommand {
 	return c
 }
 
-func (c *ProcessHLSCommand) SetOutput(m3u8_file string) *ProcessHLSCommand {
-	c.output = fmt.Sprintf("public/%s/%s", c.stream_id, m3u8_file)
+func (c *ProcessHLSCommand) SetOutput() *ProcessHLSCommand {
+	c.output = BuildHLSm3u8FilePath(c.stream_id)
 	return c
 }
 
@@ -96,9 +134,10 @@ func (c *ProcessHLSCommand) Run() error {
 }
 func (c *ProcessHLSCommand) Cancel() {
 	c.cancelFn()
+	c.logger.Info("Stopped.")
 }
 
 func (c *ProcessHLSCommand) Print() {
-	args_str := strings.Join(c.args, " ")
-	fmt.Printf("%s %s", c.name, args_str)
+	args := c.buildArgs()
+	fmt.Printf("%s %s", c.name, args)
 }

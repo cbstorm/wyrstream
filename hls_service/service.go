@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/cbstorm/wyrstream/lib/dtos"
@@ -32,18 +32,40 @@ type HLSService struct {
 }
 
 func (s *HLSService) ProcessStart(input *dtos.HLSPublishStartInput) error {
-	m3u8_file := "playlist.m3u8"
-	hls_url := BuildHLSUrl(input.StreamId, m3u8_file)
-	if err := utils.AssertDir(fmt.Sprintf("public/%s/%s", input.StreamId, m3u8_file)); err != nil {
+	hls_url := BuildHLSUrl(input.StreamId)
+	if err := utils.AssertDir(BuildHLSStreamDir(input.StreamId) + "/"); err != nil {
 		return err
 	}
 	stream := entities.NewStreamEntity()
 	if err := repositories.GetStreamRepository().UpdatePublishStartByStreamId(input.StreamId, hls_url, stream); err != nil {
 		return err
 	}
-	stream_url := fmt.Sprintf("%s?streamid=%s%s?key=%s", input.StreamServer, input.StreamServerApp, input.StreamId, stream.SubscribeKey)
-	c := NewProcessHLSCommand(input.StreamId).SetStartNumber(1).SetInput(stream_url).SetOutput(m3u8_file)
-	// c.Print()
+	stream_url := BuildStreamURL(input.StreamServer, input.StreamServerApp, input.StreamId, stream.SubscribeKey)
+	c := NewProcessHLSCommand(input.StreamId).SetStartNumber(s.getStartFileNumber(input.StreamId)).SetInput(stream_url).SetOutput()
+	GetProcessCommandStore().Add(c)
+	c.Print()
 	go c.Run()
 	return nil
+}
+
+func (s *HLSService) ProcessStop(input *dtos.HLSPublishStopInput) error {
+	if c := GetProcessCommandStore().Get(input.StreamId); c != nil {
+		c.Cancel()
+		GetProcessCommandStore().Remove(input.StreamId)
+	}
+	stream := entities.NewStreamEntity()
+	if err := repositories.GetStreamRepository().UpdatePublishStopByStreamId(input.StreamId, stream); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *HLSService) getStartFileNumber(stream_id string) uint {
+	files, err := utils.ListDirWithFilter(BuildHLSStreamDir(stream_id), func(f_name string) bool {
+		return strings.HasPrefix(f_name, SEGMENT_FILE_PREFIX) && strings.HasSuffix(f_name, SEGMENT_FILE_SUFFIX)
+	})
+	if err != nil {
+		return 0
+	}
+	return uint(len(files) + 1)
 }

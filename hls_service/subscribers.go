@@ -19,12 +19,16 @@ var _ = nats_service.GetNATSService().AddSubcriber(
 					if err := msg.JSONParse(stop_input); err != nil {
 						return nil, err
 					}
+					// Process stop command
+					if err := GetHLSService().ProcessStop(stop_input); err != nil {
+						return nil, err
+					}
 					return nil, nil
 				},
 			)
 			nats_service.GetNATSService().AddSubcriber(listen_publish_stop)
 			nats_service.GetNATSService().Start(listen_publish_stop.GetId())
-
+			// Process start command
 			if err := GetHLSService().ProcessStart(start_input); err != nil {
 				return nil, err
 			}
