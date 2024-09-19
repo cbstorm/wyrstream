@@ -37,6 +37,7 @@ mkdist:
 clean:
 	rm -rf $(OUT)/*
 	rm -rf $(HLS_SERVICE_DIR)/public/*
+	rm -rf tmp/*.jpg
 
 work:
 	rm -rf go.work
@@ -103,7 +104,7 @@ test-pub:
     -maxrate:v 2M \
     -bufsize:v 1M \
     -preset ultrafast \
-	-f mpegts "srt://127.0.0.1:6000?streamid=publish:/live/STR66E95B8E2?key=vf5ISSbAo20E4pjgJnuAHWQvggtGtF"
+	-f mpegts "srt://127.0.0.1:6000?streamid=publish:/live/STR66EC7A942?key=CN2Td2VVWFH10jJLuIqIQtkgg8MrLQ"
 test-sub:
 	ffplay -v quiet -f mpegts -transtype live -i "srt://127.0.0.1:6000?streamid=/live/STR66E95B8E2?key=0MRWUlRLHSViEddcmOtKLMDYann1st"
 test-play-hls:
@@ -125,4 +126,6 @@ test-hls:
 	-hls_segment_filename hls_service/public/STR66E95B8E2/seg-%05d.ts \
 	-start_number 1 \
 	hls_service/public/STR66E95B8E2/playlist.m3u8
+test-thumbnail:
+	ffmpeg -v error -i "srt://127.0.0.1:6000?streamid=/live/STR66EC7A942?key=Kw8kywlar6TFQTLWjzzuE5fit5xqLc" -q:v 1 -frames:v 1 tmp/STR66EC7A942.jpg
 

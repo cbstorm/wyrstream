@@ -44,13 +44,14 @@ func (r *StreamRepository) FindOneByStreamIdAndSubscribeKey(stream_id, subscribe
 	}, out, opts...)
 }
 
-func (r *StreamRepository) UpdatePublishStartByStreamId(stream_id string, hls_url string, out *entities.StreamEntity, opts ...CURDOptionFunc) error {
+func (r *StreamRepository) UpdatePublishStartByStreamId(stream_id, hls_url, thumbnail_url string, out *entities.StreamEntity, opts ...CURDOptionFunc) error {
 	return r.UpdateOne(map[string]interface{}{
 		"stream_id": stream_id,
 	}, map[string]interface{}{
 		"is_publishing": true,
 		"published_at":  time.Now().UTC(),
 		"hls_url":       hls_url,
+		"thumbnail_url": thumbnail_url,
 	}, out, opts...)
 }
 

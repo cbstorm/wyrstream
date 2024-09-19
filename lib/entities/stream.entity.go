@@ -22,7 +22,8 @@ type StreamEntity struct {
 	PublishedAt     time.Time          `bson:"published_at,omitempty" json:"published_at,omitempty"`
 	StoppedAt       time.Time          `bson:"stopped_at,omitempty" json:"stopped_at,omitempty"`
 	HLSUrl          string             `bson:"hls_url" json:"hls_url"`
-	GuidanceCommand string             `bson:"-" json:"guidance_command"`
+	ThumbnailUrl    string             `bson:"thumbnail_url" json:"thumbnail_url"`
+	GuidanceCommand string             `bson:"guidance_command" json:"guidance_command"`
 }
 
 func NewStreamEntity() *StreamEntity {

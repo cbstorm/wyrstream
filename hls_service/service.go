@@ -33,25 +33,32 @@ type HLSService struct {
 
 func (s *HLSService) ProcessStart(input *dtos.HLSPublishStartInput) error {
 	hls_url := BuildHLSUrl(input.StreamId)
-	if err := utils.AssertDir(BuildHLSStreamDir(input.StreamId) + "/"); err != nil {
+	thumbnail_url := BuildThumbnailUrl(input.StreamId)
+	if err := utils.AssertDir(BuildHLSStreamDir(input.StreamId) + "/" + THUMBNAIL_DIR + "/"); err != nil {
 		return err
 	}
 	stream := entities.NewStreamEntity()
-	if err := repositories.GetStreamRepository().UpdatePublishStartByStreamId(input.StreamId, hls_url, stream); err != nil {
+	if err := repositories.GetStreamRepository().UpdatePublishStartByStreamId(input.StreamId, hls_url, thumbnail_url, stream); err != nil {
 		return err
 	}
 	stream_url := BuildStreamURL(input.StreamServer, input.StreamServerApp, input.StreamId, stream.SubscribeKey)
-	c := NewProcessHLSCommand(input.StreamId).SetStartNumber(s.getStartFileNumber(input.StreamId)).SetInput(stream_url).SetOutput()
-	GetProcessCommandStore().Add(c)
-	c.Print()
-	go c.Run()
+	hls_cmd := NewProcessHLSCommand(input.StreamId).SetStartNumber(s.getStartFileNumber(input.StreamId)).SetInput(stream_url)
+	GetProcessHLSCommandStore().Add(hls_cmd)
+	go hls_cmd.Run()
+	thumbnail_cmd := NewProcessThumbnailCommand(input.StreamId).SetInput(stream_url)
+	GetProcessThumbnailCommandStore().Add(thumbnail_cmd)
+	go thumbnail_cmd.Start()
 	return nil
 }
 
 func (s *HLSService) ProcessStop(input *dtos.HLSPublishStopInput) error {
-	if c := GetProcessCommandStore().Get(input.StreamId); c != nil {
-		c.Cancel()
-		GetProcessCommandStore().Remove(input.StreamId)
+	if hls_cmd := GetProcessHLSCommandStore().Get(input.StreamId); hls_cmd != nil {
+		hls_cmd.Cancel()
+		GetProcessHLSCommandStore().Remove(input.StreamId)
+	}
+	if thumbnail_cmd := GetProcessThumbnailCommandStore().Get(input.StreamId); thumbnail_cmd != nil {
+		thumbnail_cmd.Cancel()
+		GetProcessThumbnailCommandStore().Remove(input.StreamId)
 	}
 	stream := entities.NewStreamEntity()
 	if err := repositories.GetStreamRepository().UpdatePublishStopByStreamId(input.StreamId, stream); err != nil {

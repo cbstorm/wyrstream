@@ -13,7 +13,7 @@ import (
 var process_hls_cmd_store *ProcessHLSCommandStore
 var process_hls_cmd_store_sync sync.Once
 
-func GetProcessCommandStore() *ProcessHLSCommandStore {
+func GetProcessHLSCommandStore() *ProcessHLSCommandStore {
 	if process_hls_cmd_store == nil {
 		process_hls_cmd_store_sync.Do(func() {
 			process_hls_cmd_store = &ProcessHLSCommandStore{
@@ -79,18 +79,14 @@ func NewProcessHLSCommand(stream_id string) *ProcessHLSCommand {
 			"-f", "hls",
 			"-hls_time", "6",
 			"-hls_list_size", "6",
-			"-hls_segment_filename", BuildHLSSegmentFile(stream_id),
+			"-hls_segment_filename", BuildHLSSegmentFilePath(stream_id),
 		},
+		output: BuildHLSm3u8FilePath(stream_id),
 	}
 }
 
 func (c *ProcessHLSCommand) SetInput(i string) *ProcessHLSCommand {
 	c.input = []string{"-i", i}
-	return c
-}
-
-func (c *ProcessHLSCommand) SetOutput() *ProcessHLSCommand {
-	c.output = BuildHLSm3u8FilePath(c.stream_id)
 	return c
 }
 
@@ -120,6 +116,7 @@ func (c *ProcessHLSCommand) Run() error {
 		c.logger.Error("Could not start command with err: %v", err)
 		return err
 	}
+	c.logger.Info("Starting process HLS")
 	stderr_output, err := io.ReadAll(stderr)
 	if err != nil {
 		c.logger.Error("Could not read from stderr with err: %v", err)
