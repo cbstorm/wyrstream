@@ -14,6 +14,9 @@ func main() {
 	if err := configs.GetConfig().Load(); err != nil {
 		logg.Fatal("Could not load config with error: %v", err)
 	}
+	if err := configs.GetConfig().LoadStreamServerConfig(); err != nil {
+		logg.Fatal("Could not load stream server config with error: %v", err)
+	}
 	// DB
 	db := database.GetDatabase()
 	if err := db.LoadConfig(configs.GetConfig()); err != nil {

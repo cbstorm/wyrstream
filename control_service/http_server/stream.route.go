@@ -18,6 +18,26 @@ var _ = GetHttpServer().FeedRoute(&HTTPRoute{
 			req_ctx := common.GetRequestContext(c)
 			fetchArgs := dtos.NewFetchArgs()
 			fetchArgs.ParseQueries(c.Queries())
+			fetchArgs.SetFilter("is_publishing", true)
+			res, err := services.GetStreamService().FetchStreams(fetchArgs, req_ctx)
+			if err != nil {
+				return common.ResponseError(c, err)
+			}
+			return common.ResponseOK(c, res)
+		},
+	},
+})
+
+var _ = GetHttpServer().FeedRoute(&HTTPRoute{
+	Method:   GET,
+	Endpoint: "/streams/my_streams",
+	Handlers: []func(*fiber.Ctx) error{
+		middlewares.AuthRole(enums.AUTH_ROLE_USER),
+		func(c *fiber.Ctx) error {
+			req_ctx := common.GetRequestContext(c)
+			fetchArgs := dtos.NewFetchArgs()
+			fetchArgs.ParseQueries(c.Queries())
+			fetchArgs.SetFilter("publisher_id", req_ctx.GetObjId())
 			res, err := services.GetStreamService().FetchStreams(fetchArgs, req_ctx)
 			if err != nil {
 				return common.ResponseError(c, err)

@@ -5,22 +5,24 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cbstorm/wyrstream/lib/configs"
 	"github.com/cbstorm/wyrstream/lib/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type StreamEntity struct {
-	BaseEntity   `bson:",inline"`
-	PublisherId  primitive.ObjectID `bson:"publisher_id,omitempty" json:"publisher_id,omitempty"`
-	Title        string             `bson:"title" json:"title"`
-	Description  string             `bson:"description" json:"description"`
-	StreamId     string             `bson:"stream_id" json:"stream_id"`
-	PublishKey   string             `bson:"publish_key" json:"-"`
-	SubscribeKey string             `bson:"subscribe_key" json:"-"`
-	IsPublishing bool               `bson:"is_publishing" json:"is_publishing"`
-	PublishedAt  time.Time          `bson:"published_at" json:"published_at"`
-	StoppedAt    time.Time          `bson:"stopped_at" json:"stopped_at"`
-	HLSUrl       string             `bson:"hls_url" json:"hls_url"`
+	BaseEntity      `bson:",inline"`
+	PublisherId     primitive.ObjectID `bson:"publisher_id,omitempty" json:"publisher_id,omitempty"`
+	Title           string             `bson:"title" json:"title"`
+	Description     string             `bson:"description" json:"description"`
+	StreamId        string             `bson:"stream_id" json:"stream_id"`
+	PublishKey      string             `bson:"publish_key" json:"-"`
+	SubscribeKey    string             `bson:"subscribe_key" json:"-"`
+	IsPublishing    bool               `bson:"is_publishing" json:"is_publishing"`
+	PublishedAt     time.Time          `bson:"published_at,omitempty" json:"published_at,omitempty"`
+	StoppedAt       time.Time          `bson:"stopped_at,omitempty" json:"stopped_at,omitempty"`
+	HLSUrl          string             `bson:"hls_url" json:"hls_url"`
+	GuidanceCommand string             `bson:"-" json:"guidance_command"`
 }
 
 func NewStreamEntity() *StreamEntity {
@@ -43,5 +45,11 @@ func (e *StreamEntity) GeneratePublishKey() *StreamEntity {
 
 func (e *StreamEntity) GenerateSubscribeKey() *StreamEntity {
 	e.SubscribeKey = utils.StringRand(30)
+	return e
+}
+
+func (e *StreamEntity) MakeGuidanceCommand() *StreamEntity {
+	stream_server_public_url := configs.GetConfig().SERVER_PUBLIC_URL()
+	e.GuidanceCommand = fmt.Sprintf("ffmpeg -i <YOUR_INPUT> -c:v libx264 -b:v 2M -maxrate:v 2M -bufsize:v 1M -preset ultrafast -f mpegts \"%s?streamid=publish:/live/%s?key=%s\"", stream_server_public_url, e.StreamId, e.PublishKey)
 	return e
 }
