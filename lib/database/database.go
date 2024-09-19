@@ -5,7 +5,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cbstorm/wyrstream/lib/configs"
 	"github.com/cbstorm/wyrstream/lib/logger"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -14,6 +13,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/writeconcern"
 )
 
+type IDatabaseConfig interface {
+	LoadDatabaseConfig() error
+	MONGODB_URL() string
+	MONGODB_DB_NAME() string
+}
+
 var instance *Database
 var instance_sync sync.Once
 
@@ -21,7 +26,7 @@ type Database struct {
 	client *mongo.Client
 	db     *mongo.Database
 	logger *logger.Logger
-	config *configs.Config
+	config IDatabaseConfig
 }
 
 func GetDatabase() *Database {
@@ -29,7 +34,6 @@ func GetDatabase() *Database {
 		instance_sync.Do(func() {
 			instance = &Database{
 				logger: logger.NewLogger("DATABASE"),
-				config: configs.GetConfig(),
 			}
 		})
 	}
@@ -44,8 +48,16 @@ func (d *Database) DB() *mongo.Database {
 	return d.db
 }
 
+func (d *Database) LoadConfig(config IDatabaseConfig) error {
+	if err := config.LoadDatabaseConfig(); err != nil {
+		return err
+	}
+	d.config = config
+	return nil
+}
+
 func (d *Database) Connect() error {
-	clientOptions := options.Client().ApplyURI(d.config.MONGODB_URL)
+	clientOptions := options.Client().ApplyURI(d.config.MONGODB_URL())
 	clientOptions.SetMaxPoolSize(30)
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
@@ -56,7 +68,7 @@ func (d *Database) Connect() error {
 		return err
 	}
 	d.client = client
-	d.db = client.Database(d.config.MONGODB_DB_NAME, options.Database().SetWriteConcern(writeconcern.Majority()), options.Database().SetReadPreference(readpref.Secondary()))
+	d.db = client.Database(d.config.MONGODB_DB_NAME(), options.Database().SetWriteConcern(writeconcern.Majority()), options.Database().SetReadPreference(readpref.Secondary()))
 	if err := d.db.Client().Ping(context.Background(), options.Client().ReadPreference); err != nil {
 		return err
 	}

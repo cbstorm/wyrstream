@@ -1,33 +1,49 @@
 package main
 
 import (
-	local_configs "github.com/cbstorm/wyrstream/control_service/configs"
 	"github.com/cbstorm/wyrstream/control_service/http_server"
 	"github.com/cbstorm/wyrstream/lib/configs"
 	"github.com/cbstorm/wyrstream/lib/database"
 	"github.com/cbstorm/wyrstream/lib/logger"
-	natsservice "github.com/cbstorm/wyrstream/lib/nats_service"
+	"github.com/cbstorm/wyrstream/lib/nats_service"
 	"github.com/cbstorm/wyrstream/lib/redis_service"
 )
 
 func main() {
 	logg := logger.NewLogger("CONTROL_SVC")
-	if err := local_configs.GetConfig().Load(); err != nil {
-		logg.Fatal("Could not load local configs with err: %v", err)
-	}
 	if err := configs.GetConfig().Load(); err != nil {
-		logg.Fatal("Could not load configs with err: %v", err)
+		logg.Fatal("Could not load config with error: %v", err)
 	}
-	if err := database.GetDatabase().Connect(); err != nil {
+	// DB
+	db := database.GetDatabase()
+	if err := db.LoadConfig(configs.GetConfig()); err != nil {
+		logg.Fatal("Could not load database config with err: %v", err)
+	}
+	if err := db.Connect(); err != nil {
 		logg.Fatal("Could not connect to database %v", err)
 	}
-	if err := redis_service.GetRedisService().Connect(); err != nil {
+	// Redis
+	rd := redis_service.GetRedisService()
+	if err := rd.LoadConfig(configs.GetConfig()); err != nil {
+		logg.Fatal("Could not load redis config with err: %v", err)
+	}
+	if err := rd.Connect(); err != nil {
 		logg.Fatal("Could not connect to redis server with err: %v", err)
 	}
-	if err := natsservice.GetNATSService().Connect(); err != nil {
+	// NATS
+	n := nats_service.GetNATSService()
+	if err := n.LoadConfig(configs.GetConfig()); err != nil {
+		logg.Fatal("Could not NATS core config with err: %v", err)
+	}
+	if err := n.Connect(); err != nil {
 		logg.Fatal("Could not connect to NATS server with err: %v", err)
 	}
-	if err := http_server.GetHttpServer().AddRoutes().Listen(); err != nil {
+	// HTTP server
+	s := http_server.GetHttpServer()
+	if err := s.LoadConfig(configs.GetConfig()); err != nil {
+		logg.Fatal("Could not load http server config with err: %v", err)
+	}
+	if err := s.Init().AddRoutes().Listen(); err != nil {
 		logg.Fatal("Could not start http server with err: %v", err)
 	}
 }

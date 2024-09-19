@@ -1,16 +1,20 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/cbstorm/wyrstream/lib/configs"
+)
 
 const PUBLIC_DIR = "public"
 const M3U8_FILE = "playlist.m3u8"
-const SEGMENT_FILE = "seg-%05d.ts"
 const SEGMENT_FILE_PREFIX = "seg-"
 const SEGMENT_FILE_SUFFIX = ".ts"
+const SEGMENT_FILE = SEGMENT_FILE_PREFIX + "%05d" + SEGMENT_FILE_SUFFIX
 
 func BuildHLSUrl(stream_id string) string {
-	cfg := GetConfig()
-	return fmt.Sprintf("%s/%s/%s", cfg.HLS_PUBLIC_URL, stream_id, M3U8_FILE)
+	cfg := configs.GetConfig()
+	return fmt.Sprintf("%s/%s/%s", cfg.HLS_PUBLIC_URL(), stream_id, M3U8_FILE)
 }
 
 func BuildHLSStreamDir(stream_id string) string {

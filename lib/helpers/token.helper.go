@@ -12,13 +12,13 @@ import (
 	"github.com/golang-jwt/jwt"
 )
 
-func WithClaimOption(key string, value string) AuthTokenClaimOption {
+func WithClaimOption(key string, value string) AuthTokenClaimOptionFunc {
 	return func(claims *jwt.MapClaims) {
 		(*claims)[key] = value
 	}
 }
 
-type AuthTokenClaimOption func(*jwt.MapClaims)
+type AuthTokenClaimOptionFunc func(*jwt.MapClaims)
 
 type TokenHelper struct {
 	person entities.IPerson
@@ -29,7 +29,7 @@ func NewTokenHelper(person entities.IPerson, role enums.EAuthRole) *TokenHelper 
 	return &TokenHelper{person: person, role: role}
 }
 
-func (th *TokenHelper) CreateAuthToken(token_type enums.ETokenTypes, opts ...AuthTokenClaimOption) (string, error) {
+func (th *TokenHelper) CreateAuthToken(token_type enums.ETokenTypes, opts ...AuthTokenClaimOptionFunc) (string, error) {
 	redisInstance := redis_service.GetRedisService()
 	redisTokenKey := th.hashTokenKey(token_type)
 	if token_type == enums.TOKEN_TYPE_ACCESS_TOKEN {

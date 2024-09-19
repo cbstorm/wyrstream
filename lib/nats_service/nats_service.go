@@ -6,12 +6,20 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cbstorm/wyrstream/lib/configs"
 	"github.com/cbstorm/wyrstream/lib/exceptions"
 	"github.com/cbstorm/wyrstream/lib/logger"
 	"github.com/cbstorm/wyrstream/lib/utils"
 	"github.com/nats-io/nats.go"
 )
+
+type INATSCoreConfig interface {
+	LoadNATSCoreConfig() error
+	NATS_CORE_HOST() string
+	NATS_CORE_PORT() uint16
+	NATS_CORE_USERNAME() string
+	NATS_CORE_PASSWORD() string
+	NATS_CORE_QUEUE_GROUP() string
+}
 
 var instance *NATS_Service
 var instance_sync sync.Once
@@ -21,7 +29,6 @@ func GetNATSService() *NATS_Service {
 		instance_sync.Do(func() {
 			instance = &NATS_Service{
 				logger: logger.NewLogger("NATS_SERVICE"),
-				config: configs.GetConfig(),
 			}
 		})
 	}
@@ -34,12 +41,20 @@ type NATS_Service struct {
 	queue_group string
 	subscribers map[string]*Subscriber
 	mu          sync.RWMutex
-	config      *configs.Config
+	config      INATSCoreConfig
+}
+
+func (ns *NATS_Service) LoadConfig(config INATSCoreConfig) error {
+	if err := config.LoadNATSCoreConfig(); err != nil {
+		return err
+	}
+	ns.config = config
+	return nil
 }
 
 func (ns *NATS_Service) Connect() error {
-	ns.queue_group = ns.config.NATS_CORE_QUEUE_GROUP
-	nc_connection_string := fmt.Sprintf("nats://%s:%s@%s:%d", ns.config.NATS_CORE_USERNAME, ns.config.NATS_CORE_PASSWORD, ns.config.NATS_CORE_HOST, ns.config.NATS_CORE_PORT)
+	ns.queue_group = ns.config.NATS_CORE_QUEUE_GROUP()
+	nc_connection_string := fmt.Sprintf("nats://%s:%s@%s:%d", ns.config.NATS_CORE_USERNAME(), ns.config.NATS_CORE_PASSWORD(), ns.config.NATS_CORE_HOST(), ns.config.NATS_CORE_PORT())
 	nc, err := nats.Connect(nc_connection_string,
 		nats.RetryOnFailedConnect(true),
 		nats.MaxReconnects(5),
@@ -52,7 +67,7 @@ func (ns *NATS_Service) Connect() error {
 	if err = ns.verifyConnection(); err != nil {
 		return err
 	}
-	ns.logger.Info("Connect to NATS server at %s:%d successfully!", ns.config.NATS_CORE_HOST, ns.config.NATS_CORE_PORT)
+	ns.logger.Info("Connect to NATS server at %s:%d successfully!", ns.config.NATS_CORE_HOST(), ns.config.NATS_CORE_PORT())
 	return nil
 }
 

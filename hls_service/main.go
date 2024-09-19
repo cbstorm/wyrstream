@@ -13,22 +13,31 @@ func main() {
 	if err := utils.AssertDir(PUBLIC_DIR + "/"); err != nil {
 		logg.Fatal("Could not assert dir [./public] with err: %v", err)
 	}
-	if err := GetConfig().Load(); err != nil {
-		logg.Fatal("Could not load local configs with err: %v", err)
+	// DB
+	db := database.GetDatabase()
+	if err := db.LoadConfig(configs.GetConfig()); err != nil {
+		logg.Fatal("Could not load database config with err: %v", err)
 	}
-	if err := configs.GetConfig().Load(); err != nil {
-		logg.Fatal("Could not load configs with err: %v", err)
-	}
-	if err := database.GetDatabase().Connect(); err != nil {
+	if err := db.Connect(); err != nil {
 		logg.Fatal("Could not connect to database with err:  %v", err)
 	}
-	if err := nats_service.GetNATSService().Connect(); err != nil {
+	// NATS
+	n := nats_service.GetNATSService()
+	if err := n.LoadConfig(configs.GetConfig()); err != nil {
+		logg.Fatal("Could not load NATS core config with err: %v", err)
+	}
+	if err := n.Connect(); err != nil {
 		logg.Fatal("Could not connect to NATS server with err: %v", err)
 	}
-	if err := nats_service.GetNATSService().StartAllSubscriber(); err != nil {
+	if err := n.StartAllSubscriber(); err != nil {
 		logg.Fatal("Could not start subscribers with error: %v", err)
 	}
-	if err := GetHttpServer().Init().Listen(); err != nil {
+	// HLS HTTP server
+	s := GetHttpServer()
+	if err := s.LoadConfig(configs.GetConfig()); err != nil {
+		logg.Error("Could not load HLS HTTP server config with err: %v", err)
+	}
+	if err := s.Init().Listen(); err != nil {
 		logg.Fatal("Could not start http server with err: %v", err)
 	}
 }

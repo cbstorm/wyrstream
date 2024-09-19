@@ -12,6 +12,13 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/recover"
 )
 
+type HLSHttpServerConfig interface {
+	LoadHLSHttpServerConfig() error
+	HLS_HTTP_HOST() string
+	HLS_HTTP_PORT() uint16
+	HLS_PUBLIC_URL() string
+}
+
 var instance *HttpServer
 var instance_sync sync.Once
 
@@ -20,7 +27,6 @@ func GetHttpServer() *HttpServer {
 		instance_sync.Do(func() {
 			instance = &HttpServer{
 				logger: logger.NewLogger("HLS_HTTP_SERVER"),
-				config: GetConfig(),
 			}
 		})
 
@@ -31,7 +37,15 @@ func GetHttpServer() *HttpServer {
 type HttpServer struct {
 	fiber_app *fiber.App
 	logger    *logger.Logger
-	config    *Config
+	config    HLSHttpServerConfig
+}
+
+func (a *HttpServer) LoadConfig(config HLSHttpServerConfig) error {
+	if err := config.LoadHLSHttpServerConfig(); err != nil {
+		return err
+	}
+	a.config = config
+	return nil
 }
 
 func (a *HttpServer) Init() *HttpServer {
@@ -60,5 +74,5 @@ func (a *HttpServer) Init() *HttpServer {
 }
 
 func (a *HttpServer) Listen() error {
-	return a.fiber_app.Listen(fmt.Sprintf("%s:%d", a.config.HLS_HTTP_HOST, a.config.HLS_HTTP_PORT))
+	return a.fiber_app.Listen(fmt.Sprintf("%s:%d", a.config.HLS_HTTP_HOST(), a.config.HLS_HTTP_PORT()))
 }

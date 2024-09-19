@@ -56,8 +56,8 @@ clean-docker:
 mkenv:
 	@echo "MONGODB_URL=\n \
 	MONGODB_DB_NAME=\n \
-	ADDR=\n \
-	PUBLIC_URL=\n \
+	STREAM_SERVER_ADDR=\n \
+	STREAM_SERVER_PUBLIC_URL=\n \
 	NATS_CORE_USERNAME=\n \
 	NATS_CORE_PASSWORD=\n \
 	NATS_CORE_HOST=\n \

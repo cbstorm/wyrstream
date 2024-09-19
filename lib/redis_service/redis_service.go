@@ -7,10 +7,18 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cbstorm/wyrstream/lib/configs"
 	"github.com/cbstorm/wyrstream/lib/logger"
 	"github.com/redis/go-redis/v9"
 )
+
+type IRedisConfig interface {
+	LoadRedisConfig() error
+	REDIS_USERNAME() string
+	REDIS_PASSWORD() string
+	REDIS_HOST() string
+	REDIS_PORT() uint16
+	REDIS_KEY_PREFIX() string
+}
 
 var redis_service *RedisService
 var redis_service_sync sync.Once
@@ -20,7 +28,6 @@ func GetRedisService() *RedisService {
 		redis_service_sync.Do(func() {
 			redis_service = &RedisService{
 				logger: logger.NewLogger("REDIS_SERVICE"),
-				config: configs.GetConfig(),
 			}
 		})
 	}
@@ -31,14 +38,22 @@ type RedisService struct {
 	rdb        *redis.Client
 	key_prefix string
 	logger     *logger.Logger
-	config     *configs.Config
+	config     IRedisConfig
+}
+
+func (i *RedisService) LoadConfig(config IRedisConfig) error {
+	if err := config.LoadRedisConfig(); err != nil {
+		return err
+	}
+	i.config = config
+	return nil
 }
 
 func (i *RedisService) Connect() error {
 	rdb := redis.NewClient(&redis.Options{
-		Username: i.config.REDIS_USERNAME,
-		Password: i.config.REDIS_PASSWORD,
-		Addr:     fmt.Sprintf("%s:%d", i.config.REDIS_HOST, i.config.REDIS_PORT),
+		Username: i.config.REDIS_USERNAME(),
+		Password: i.config.REDIS_PASSWORD(),
+		Addr:     fmt.Sprintf("%s:%d", i.config.REDIS_HOST(), i.config.REDIS_PORT()),
 	})
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 	defer cancel()
@@ -47,7 +62,7 @@ func (i *RedisService) Connect() error {
 		return err
 	}
 	i.rdb = rdb
-	i.key_prefix = i.config.REDIS_KEY_PREFIX
+	i.key_prefix = i.config.REDIS_KEY_PREFIX()
 	i.logger.Info("Connected to redis successfully")
 	return nil
 }

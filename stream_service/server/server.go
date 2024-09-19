@@ -12,9 +12,14 @@ import (
 
 	"github.com/cbstorm/wyrstream/lib/dtos"
 	"github.com/cbstorm/wyrstream/lib/nats_service"
-	"github.com/cbstorm/wyrstream/stream_service/configs"
 	srt "github.com/datarhei/gosrt"
 )
+
+type IStreamServerConfig interface {
+	LoadStreamServerConfig() error
+	SERVER_ADDRESS() string
+	SERVER_PUBLIC_URL() string
+}
 
 var instance *Server
 var instance_sync sync.Once
@@ -38,6 +43,15 @@ type Server struct {
 	server     *srt.Server
 	channels   map[string]srt.PubSub
 	lock       sync.RWMutex
+	config     IStreamServerConfig
+}
+
+func (s *Server) LoadConfig(config IStreamServerConfig) error {
+	if err := config.LoadStreamServerConfig(); err != nil {
+		return err
+	}
+	s.config = config
+	return nil
 }
 
 func (s *Server) ListenAndServe() error {
@@ -49,9 +63,8 @@ func (s *Server) Shutdown() {
 }
 
 func (s *Server) Init() *Server {
-	cfg := configs.GetConfig()
-	s.addr = cfg.ADDR
-	s.public_url = cfg.PUBLIC_URL
+	s.addr = s.config.SERVER_ADDRESS()
+	s.public_url = s.config.SERVER_PUBLIC_URL()
 	s.app = "/live/"
 	s.channels = make(map[string]srt.PubSub)
 	return s

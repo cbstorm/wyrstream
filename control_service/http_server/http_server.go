@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/cbstorm/wyrstream/control_service/configs"
 	"github.com/cbstorm/wyrstream/lib/logger"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/compress"
@@ -13,6 +12,12 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/healthcheck"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 )
+
+type IHttpConfig interface {
+	LoadHttpConfig() error
+	HTTP_HOST() string
+	HTTP_PORT() uint16
+}
 
 var instance *HttpServer
 var instance_sync sync.Once
@@ -22,7 +27,6 @@ func GetHttpServer() *HttpServer {
 		instance_sync.Do(func() {
 			instance = &HttpServer{
 				logger: logger.NewLogger("HTTP_SERVER"),
-				config: configs.GetConfig(),
 			}
 		})
 
@@ -33,10 +37,18 @@ func GetHttpServer() *HttpServer {
 type HttpServer struct {
 	fiber_app *fiber.App
 	logger    *logger.Logger
-	config    *configs.Config
+	config    IHttpConfig
 	initiated bool
 	mu        sync.Mutex
 	routes    []*HTTPRoute
+}
+
+func (a *HttpServer) LoadConfig(config IHttpConfig) error {
+	if err := config.LoadHttpConfig(); err != nil {
+		return err
+	}
+	a.config = config
+	return nil
 }
 
 func (a *HttpServer) Init() *HttpServer {
@@ -86,5 +98,5 @@ func (a *HttpServer) FeedRoute(route *HTTPRoute) bool {
 }
 
 func (a *HttpServer) Listen() error {
-	return a.fiber_app.Listen(fmt.Sprintf("%s:%d", a.config.HTTP_HOST, a.config.HTTP_PORT))
+	return a.fiber_app.Listen(fmt.Sprintf("%s:%d", a.config.HTTP_HOST(), a.config.HTTP_PORT()))
 }
