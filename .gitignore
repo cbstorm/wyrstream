@@ -7,3 +7,6 @@ dist
 tmp
 **/go.sum
 hls_service/public/*
+**/package-lock.json
+**/node_modules
+alert_service/.out
