@@ -62,12 +62,12 @@ func (a *HttpServer) Init() *HttpServer {
 		},
 		BodyLimit: 5 * 1024 * 1024,
 	})
-	app.Static("/", "public")
 	app.Use(recover.New())
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "*",
 		AllowHeaders: "Origin, Content-Type, Accept, Accept-Encoding, X-Token, X-Refresh, Ngrok-Skip-Browser-Warning, Tz-Offset",
 	}))
+	app.Static("/", "public")
 	app.Use(healthcheck.New())
 	a.fiber_app = app
 	return a

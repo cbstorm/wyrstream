@@ -108,16 +108,16 @@ test-pub:
 test-sub:
 	ffplay -v quiet -f mpegts -transtype live -i "srt://127.0.0.1:6000?streamid=/live/STR66E95B8E2?key=0MRWUlRLHSViEddcmOtKLMDYann1st"
 test-play-hls:
-	ffplay -i "http://127.0.0.1:10000/STR66E95B8E2/playlist.m3u8"
+	ffplay -i "http://127.0.0.1:10000/STR66EC7A942/playlist.m3u8"
 test-hls:
 	ffmpeg \
 	-i srt://127.0.0.1:6000?streamid=/live/STR66E95B8E2?key=0MRWUlRLHSViEddcmOtKLMDYann1st \
 	-c:v libx264 \
 	-c:a aac \
 	-b:a 160k \
-	-b:v 2M \
-	-maxrate:v 2M \
-	-bufsize 1M \
+	-b:v 1M \
+	-maxrate:v 1M \
+	-bufsize 512k \
 	-crf 18 \
 	-preset ultrafast \
 	-f hls \
