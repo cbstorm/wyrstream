@@ -11,7 +11,7 @@ import (
 	"github.com/cbstorm/wyrstream/lib/logger"
 )
 
-const THUMBNAIL_TIME_TICKER = 20 * time.Second
+const THUMBNAIL_TIME_TICKER = 30 * time.Second
 
 var process_thumbnail_cmd_store *ProcessThumbnailCommandStore
 var process_thumbnail_cmd_store_sync sync.Once
@@ -74,6 +74,7 @@ func NewProcessThumbnailCommand(stream_id string) *ProcessThumbnailCommand {
 			"-v", "quiet",
 			"-q:v", "1",
 			"-update", "1",
+			"-skip_frame", "nokey",
 			"-frames:v", "1",
 		},
 		output:  BuildThumbnailFilePath(stream_id),

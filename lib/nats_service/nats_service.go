@@ -96,6 +96,8 @@ func (ns *NATS_Service) AddSubcriber(s *Subscriber) bool {
 }
 
 func (ns *NATS_Service) Start(subscriber_id string) {
+	ns.mu.Lock()
+	defer ns.mu.Unlock()
 	s := ns.subscribers[subscriber_id]
 	if s == nil {
 		return
@@ -111,11 +113,17 @@ func (ns *NATS_Service) StartAllSubscriber() error {
 }
 
 func (ns *NATS_Service) StopSubscribe(subscriber_id string) error {
+	ns.mu.Lock()
+	defer ns.mu.Unlock()
 	s := ns.subscribers[subscriber_id]
 	if s == nil {
 		return nil
 	}
-	return s.Stop()
+	if err := s.Stop(); err != nil {
+		return err
+	}
+	delete(ns.subscribers, subscriber_id)
+	return nil
 }
 
 type RequestOpts struct {

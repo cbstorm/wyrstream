@@ -341,10 +341,10 @@ type IFetchArgs interface {
 
 type FetchOutput[T entities.IEntity] struct {
 	Total  int64 `json:"total"`
-	Result []T   `json:"result"`
+	Result *[]T  `json:"result"`
 }
 
-func NewFetchOutput[T entities.IEntity](total int64, result []T) *FetchOutput[T] {
+func NewFetchOutput[T entities.IEntity](total int64, result *[]T) *FetchOutput[T] {
 	return &FetchOutput[T]{
 		Total:  total,
 		Result: result,
@@ -404,11 +404,11 @@ func (r *CRUDRepository[T]) Fetch(fetchArgs IFetchArgs, out *[]T, opts ...CURDOp
 	if err != nil {
 		return nil, err
 	}
-	fetchOut := NewFetchOutput(count, *out)
+	fetchOut := NewFetchOutput(count, out)
 	return fetchOut, nil
 }
 
-func (r *CRUDRepository[T]) WithTransaction(process func(ctx mongo.SessionContext) error) error {
+func (r *CRUDRepository[T]) WithTransaction(process func(ctx mongo.SessionContext) error, opts ...CURDOptionFunc) error {
 	client := database.GetDatabase().Client()
 	wc := writeconcern.Majority()
 	txnOptions := options.Transaction().SetWriteConcern(wc)
@@ -416,9 +416,16 @@ func (r *CRUDRepository[T]) WithTransaction(process func(ctx mongo.SessionContex
 	if err != nil {
 		return err
 	}
-	defer session.EndSession(context.Background())
-
-	if err := mongo.WithSession(context.Background(), session, func(ctx mongo.SessionContext) error {
+	ss_ctx := context.Background()
+	o := &CRUDOption{}
+	defer session.EndSession(ss_ctx)
+	for _, v := range opts {
+		v(o)
+	}
+	if o.ctx != nil {
+		ss_ctx = o.ctx
+	}
+	if err := mongo.WithSession(ss_ctx, session, func(ctx mongo.SessionContext) error {
 		if err := session.StartTransaction(txnOptions); err != nil {
 			return err
 		}

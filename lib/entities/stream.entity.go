@@ -24,6 +24,8 @@ type StreamEntity struct {
 	HLSUrl          string             `bson:"hls_url" json:"hls_url"`
 	ThumbnailUrl    string             `bson:"thumbnail_url" json:"thumbnail_url"`
 	GuidanceCommand string             `bson:"guidance_command" json:"guidance_command"`
+
+	StreamLogs []*StreamLogEntity `bson:"-" json:"stream_logs"`
 }
 
 func NewStreamEntity() *StreamEntity {

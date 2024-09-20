@@ -13,7 +13,8 @@ var _ = nats_service.GetNATSService().AddSubcriber(
 				return nil, err
 			}
 			//Listen stop subscriber
-			listen_publish_stop := nats_service.NewSubscriber(nats_service.HLS_PUBLISH_STOP.Concat(start_input.StreamId),
+			var listen_publish_stop *nats_service.Subscriber
+			listen_publish_stop = nats_service.NewSubscriber(nats_service.HLS_PUBLISH_STOP.Concat(start_input.StreamId),
 				func(msg nats_service.IRequestMessage) (interface{}, error) {
 					stop_input := &dtos.HLSPublishStopInput{}
 					if err := msg.JSONParse(stop_input); err != nil {
@@ -23,6 +24,7 @@ var _ = nats_service.GetNATSService().AddSubcriber(
 					if err := GetHLSService().ProcessStop(stop_input); err != nil {
 						return nil, err
 					}
+					nats_service.GetNATSService().StopSubscribe(listen_publish_stop.GetId())
 					return nil, nil
 				},
 			)

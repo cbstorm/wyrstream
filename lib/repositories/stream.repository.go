@@ -6,6 +6,7 @@ import (
 
 	"github.com/cbstorm/wyrstream/lib/database"
 	"github.com/cbstorm/wyrstream/lib/entities"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 var stream_repository *StreamRepository
@@ -45,21 +46,41 @@ func (r *StreamRepository) FindOneByStreamIdAndSubscribeKey(stream_id, subscribe
 }
 
 func (r *StreamRepository) UpdatePublishStartByStreamId(stream_id, hls_url, thumbnail_url string, out *entities.StreamEntity, opts ...CURDOptionFunc) error {
-	return r.UpdateOne(map[string]interface{}{
-		"stream_id": stream_id,
-	}, map[string]interface{}{
-		"is_publishing": true,
-		"published_at":  time.Now().UTC(),
-		"hls_url":       hls_url,
-		"thumbnail_url": thumbnail_url,
-	}, out, opts...)
+	return r.WithTransaction(func(ctx mongo.SessionContext) error {
+		// Update stream
+		if err := r.UpdateOne(map[string]interface{}{
+			"stream_id": stream_id,
+		}, map[string]interface{}{
+			"is_publishing": true,
+			"published_at":  time.Now().UTC(),
+			"hls_url":       hls_url,
+			"thumbnail_url": thumbnail_url,
+		}, out, WithContext(ctx)); err != nil {
+			return err
+		}
+		// Insert stream log
+		if err := GetStreamLogRepository().InsertOne(entities.NewStreamLogEntity().SetStreamId(out.Id).SetStartLog(), WithContext(ctx)); err != nil {
+			return err
+		}
+		return nil
+	}, opts...)
 }
 
 func (r *StreamRepository) UpdatePublishStopByStreamId(stream_id string, out *entities.StreamEntity, opts ...CURDOptionFunc) error {
-	return r.UpdateOne(map[string]interface{}{
-		"stream_id": stream_id,
-	}, map[string]interface{}{
-		"is_publishing": false,
-		"stopped_at":    time.Now().UTC(),
-	}, out, opts...)
+	return r.WithTransaction(func(ctx mongo.SessionContext) error {
+		// Update stream
+		if err := r.UpdateOne(map[string]interface{}{
+			"stream_id": stream_id,
+		}, map[string]interface{}{
+			"is_publishing": false,
+			"stopped_at":    time.Now().UTC(),
+		}, out, WithContext(ctx)); err != nil {
+			return err
+		}
+		// Insert stream log
+		if err := GetStreamLogRepository().InsertOne(entities.NewStreamLogEntity().SetStreamId(out.Id).SetStopLog(), WithContext(ctx)); err != nil {
+			return err
+		}
+		return nil
+	}, opts...)
 }

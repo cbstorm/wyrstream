@@ -4,31 +4,31 @@ import (
 	"fmt"
 )
 
-func Map[K any, V any](list []K, f func(e K, idx int) V) []V {
-	n := make([]V, len(list))
-	for i, e := range list {
+func Map[K any, V any](list *[]K, f func(e K, idx int) V) []V {
+	n := make([]V, len(*list))
+	for i, e := range *list {
 		n[i] = f(e, i)
 	}
 	return n
 }
 
-func Flat[K any](list [][]K) []K {
+func Flat[K any](list *[][]K) []K {
 	out := make([]K, 0)
-	for i := range list {
-		out = append(out, list[i]...)
+	for i := range *list {
+		out = append(out, (*list)[i]...)
 	}
 	return out
 }
 
-func ForEach[K any](list []K, f func(e K, idx int)) {
-	for i, e := range list {
+func ForEach[K any](list *[]K, f func(e K, idx int)) {
+	for i, e := range *list {
 		f(e, i)
 	}
 }
 
-func Filter[K any](list []K, f func(e K, idx int) bool) []K {
+func Filter[K any](list *[]K, f func(e K, idx int) bool) []K {
 	n := make([]K, 0)
-	for i, e := range list {
+	for i, e := range *list {
 		if f(e, i) {
 			n = append(n, e)
 		}
@@ -36,9 +36,9 @@ func Filter[K any](list []K, f func(e K, idx int) bool) []K {
 	return n
 }
 
-func Find[K any](list []K, f func(e K) bool) (K, bool) {
+func Find[K any](list *[]K, f func(e K) bool) (K, bool) {
 	var n K
-	for _, e := range list {
+	for _, e := range *list {
 		if f(e) {
 			return e, true
 		}
@@ -47,8 +47,8 @@ func Find[K any](list []K, f func(e K) bool) (K, bool) {
 	return n, false
 }
 
-func FindIndex[K any](list []K, f func(e K) bool) int {
-	for i, e := range list {
+func FindIndex[K any](list *[]K, f func(e K) bool) int {
+	for i, e := range *list {
 		if f(e) {
 			return i
 		}
@@ -56,8 +56,8 @@ func FindIndex[K any](list []K, f func(e K) bool) int {
 	return -1
 }
 
-func Includes[K int | string | bool](list []K, compare K) bool {
-	for _, e := range list {
+func Includes[K int | string | bool](list *[]K, compare K) bool {
+	for _, e := range *list {
 		if e == compare {
 			return true
 		}
@@ -65,8 +65,8 @@ func Includes[K int | string | bool](list []K, compare K) bool {
 	return false
 }
 
-func IncludesEnum[K any](list []K, compare K) bool {
-	for _, e := range list {
+func IncludesEnum[K any](list *[]K, compare K) bool {
+	for _, e := range *list {
 		if fmt.Sprintf("%v", e) == fmt.Sprintf("%v", compare) {
 			return true
 		}
@@ -74,9 +74,9 @@ func IncludesEnum[K any](list []K, compare K) bool {
 	return false
 }
 
-func Join(list []string, separator string) string {
+func Join(list *[]string, separator string) string {
 	var n string
-	for i, e := range list {
+	for i, e := range *list {
 		if i == 0 {
 			n = e
 		} else {
@@ -86,16 +86,16 @@ func Join(list []string, separator string) string {
 	return n
 }
 
-func Reduce[K any, V any](list []K, f func(a V, b K) V, inititalValue V) V {
-	for _, e := range list {
+func Reduce[K any, V any](list *[]K, f func(a V, b K) V, inititalValue V) V {
+	for _, e := range *list {
 		inititalValue = f(inititalValue, e)
 	}
 	return inititalValue
 }
 
-func KeyBy[K any](list []K, f func(a K) string) map[string]K {
+func KeyBy[K any](list *[]K, f func(a K) string) map[string]K {
 	result := make(map[string]K)
-	for _, e := range list {
+	for _, e := range *list {
 		key := f(e)
 		result[fmt.Sprintf("%v", key)] = e
 	}
@@ -141,8 +141,8 @@ func Reverse[K any](list *[]K) {
 	}
 }
 
-func Every[K any](list []K, f func(a K) bool) bool {
-	for _, v := range list {
+func Every[K any](list *[]K, f func(a K) bool) bool {
+	for _, v := range *list {
 		if !f(v) {
 			return false
 		}
@@ -150,14 +150,14 @@ func Every[K any](list []K, f func(a K) bool) bool {
 	return true
 }
 
-func GroupBy[K any](list []K, f func(a K) string) map[string]*[]K {
-	out := map[string]*[]K{}
-	for _, v := range list {
+func GroupBy[K any](list *[]K, f func(a K) string) *map[string][]K {
+	out := make(map[string][]K)
+	for _, v := range *list {
 		key := f(v)
 		if out[key] == nil {
-			out[key] = &[]K{}
+			out[key] = []K{}
 		}
-		*out[key] = append(*out[key], v)
+		out[key] = append(out[key], v)
 	}
-	return out
+	return &out
 }

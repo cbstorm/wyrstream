@@ -48,7 +48,7 @@ func (th *TokenHelper) CreateAuthToken(token_type enums.ETokenTypes, opts ...Aut
 		claims["tokenType"] = enums.TOKEN_TYPE_ACCESS_TOKEN
 	}
 	if token_type == enums.TOKEN_TYPE_REFRESH_TOKEN {
-		tokenExp = time.Minute * 30
+		tokenExp = time.Hour * 24
 		claims["tokenType"] = enums.TOKEN_TYPE_REFRESH_TOKEN
 	}
 	claims["iss"] = cfg.APP_NAME

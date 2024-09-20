@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/cbstorm/wyrstream/control_service/common"
+	"github.com/cbstorm/wyrstream/control_service/helpers"
 	"github.com/cbstorm/wyrstream/lib/dtos"
 	"github.com/cbstorm/wyrstream/lib/entities"
 	"github.com/cbstorm/wyrstream/lib/exceptions"
@@ -34,7 +35,14 @@ func NewStreamService() *StreamService {
 
 func (svc *StreamService) FetchStreams(fetchArgs *dtos.FetchArgs, reqCtx *common.RequestContext) (*repositories.FetchOutput[*entities.StreamEntity], error) {
 	streams := make([]*entities.StreamEntity, 0)
-	return svc.stream_repository.Fetch(fetchArgs, &streams)
+	res, err := svc.stream_repository.Fetch(fetchArgs, &streams)
+	helper := helpers.NewStreamsHelper(res.Result)
+	if fetchArgs.IsIncludes("stream_logs") {
+		if err := helper.ResolveStreamLogs(); err != nil {
+			return nil, err
+		}
+	}
+	return res, err
 }
 
 func (svc *StreamService) GetOneStream(input *dtos.GetOneInput, reqCtx *common.RequestContext) (*entities.StreamEntity, error) {
