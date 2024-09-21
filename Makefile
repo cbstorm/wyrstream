@@ -78,6 +78,7 @@ mkenv:
 	REDIS_HOST=\n \
 	REDIS_PORT=\n \
 	REDIS_KEY_PREFIX=\n \
+	DISCORD_BOT_TOKEN=\n \
 	> .env
 setup: mkenv
 test:

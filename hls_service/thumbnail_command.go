@@ -126,7 +126,6 @@ func (c *ProcessThumbnailCommand) run() error {
 		return nil
 	}
 	c.setInput(input)
-	c.Print()
 	args := c.buildArgs()
 	cmd := exec.CommandContext(c.ctx, c.name, args...)
 	stderr, err := cmd.StderrPipe()
@@ -150,7 +149,6 @@ func (c *ProcessThumbnailCommand) run() error {
 		c.logger.Error("Could not wait for command complete with err: %v", err)
 		return err
 	}
-	c.Print()
 	c.logger.Info("DONE")
 	return nil
 }
