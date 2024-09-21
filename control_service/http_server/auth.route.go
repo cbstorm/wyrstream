@@ -13,6 +13,7 @@ var _ = GetHttpServer().FeedRoute(&HTTPRoute{
 	Endpoint: "/auth/user/login",
 	Handlers: []func(*fiber.Ctx) error{
 		middlewares.LoggingMiddleware,
+		middlewares.Alert,
 		middlewares.BodyRequiredMiddleware,
 		func(c *fiber.Ctx) error {
 			result, err := nats_service.GetNATSService().Request(nats_service.AUTH_USER_LOGIN, c.BodyRaw())
@@ -29,6 +30,7 @@ var _ = GetHttpServer().FeedRoute(&HTTPRoute{
 	Endpoint: "/auth/user/create_account",
 	Handlers: []func(*fiber.Ctx) error{
 		middlewares.LoggingMiddleware,
+		middlewares.Alert,
 		middlewares.BodyRequiredMiddleware,
 		func(c *fiber.Ctx) error {
 			result, err := nats_service.GetNATSService().Request(nats_service.AUTH_USER_CREATE_ACCOUNT, c.BodyRaw())

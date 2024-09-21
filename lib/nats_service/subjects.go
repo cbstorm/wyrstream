@@ -20,6 +20,10 @@ const (
 	HLS_PUBLISH_STOP  NATS_Subject = "hls.publish.stop"
 )
 
+const (
+	ALERT NATS_Subject = "alert"
+)
+
 func (s NATS_Subject) Concat(e string) NATS_Subject {
 	return NATS_Subject(string(s) + "." + e)
 }

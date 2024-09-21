@@ -6,6 +6,7 @@ CONTROL_SERVICE_DIR = ./control_service
 STREAM_SERVICE_DIR = ./stream_service
 AUTH_SERVICE_DIR = ./auth_service
 HLS_SERVICE_DIR = ./hls_service
+ALERT_SERVICE_DIR = ./alert_service
 LIB_DIR = ./lib
 OUT = ./dist
 CONTROL_SVC = $(OUT)/control_svc
@@ -15,7 +16,7 @@ HLS_SVC = $(OUT)/hls_svc
 
 all: control-svc stream-svc auth-svc
 
-build: mkdist build-control-svc build-stream-svc build-auth-svc build-hls-svc
+build: mkdist build-control-svc build-stream-svc build-auth-svc build-hls-svc build-alert-svc
 build-control-svc:
 	go build -o $(CONTROL_SVC) $(CONTROL_SERVICE_DIR)
 build-stream-svc:
@@ -24,6 +25,8 @@ build-auth-svc:
 	go build -o $(AUTH_SVC) $(AUTH_SERVICE_DIR)
 build-hls-svc:
 	go build -o $(AUTH_SVC) $(HLS_SERVICE_DIR)
+build-alert-svc:
+	cd $(ALERT_SERVICE_DIR) && yarn build && cd ..
 control-svc:
 	$(CONTROL_SVC)
 stream-svc:
@@ -44,10 +47,11 @@ work:
 	go work init $(CONTROL_SERVICE_DIR) $(STREAM_SERVICE_DIR) $(AUTH_SERVICE_DIR) $(LIB_DIR) $(HLS_SERVICE_DIR)
 	go work sync
 deps:
-	cd $(LIB_DIR) && go mod tidy && cd ..
-	cd $(AUTH_SERVICE_DIR) && go mod tidy && cd ..
-	cd $(CONTROL_SERVICE_DIR) && go mod tidy && cd ..
-	cd $(STREAM_SERVICE_DIR) && go mod tidy && cd ..
+	cd $(LIB_DIR) && go mod download && cd ..
+	cd $(AUTH_SERVICE_DIR) && go mod download && cd ..
+	cd $(CONTROL_SERVICE_DIR) && go mod download && cd ..
+	cd $(STREAM_SERVICE_DIR) && go mod download && cd ..
+	cd $(ALERT_SERVICE_DIR) && yarn install && cd ..
 up:
 	docker compose -f docker-compose.dev.yml up -d
 down:

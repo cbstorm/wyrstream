@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"sync"
 
 	"github.com/cbstorm/wyrstream/lib/entities"
 	"github.com/cbstorm/wyrstream/lib/enums"
@@ -30,6 +31,7 @@ type RequestContext struct {
 	payload         map[string]interface{}
 	timezone_offset int
 	http_ctx        context.Context
+	mu              sync.Mutex
 }
 
 func NewRequestContext() *RequestContext {
@@ -187,6 +189,8 @@ func (ctx *RequestContext) SetHttpContext(http_ctx context.Context) *RequestCont
 }
 
 func (ctx *RequestContext) GetLogger() *logger.Logger {
+	ctx.mu.Lock()
+	defer ctx.mu.Unlock()
 	if ctx.logger == nil {
 		ctx.logger = logger.NewLogger(fmt.Sprintf("%s %s %s", ctx.ip, ctx.method, ctx.path))
 	}

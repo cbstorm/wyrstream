@@ -1,10 +1,9 @@
 import { Msg, NatsConnection, connect } from 'nats';
-import { INATSConfig, ISubscriber } from './nats_service.interface';
+import { INATSConfig } from './nats_service.interface';
 
 class NATSService {
   private _nats_conn!: NatsConnection;
   private _config!: INATSConfig;
-  private _subscribers: { [key: string]: ISubscriber<any> } = {};
   constructor() {}
 
   LoadConfig(config: INATSConfig) {
@@ -37,7 +36,7 @@ class NATSService {
     return await this._nats_conn.close();
   }
   async Regis(queue: string, handler: (m: Msg) => void) {
-    const sub = this._nats_conn.subscribe(queue);
+    const sub = this._nats_conn.subscribe(queue, { queue: this._config.NATS_CORE_QUEUE_GROUP });
     (async () => {
       for await (const m of sub) {
         handler(m);
