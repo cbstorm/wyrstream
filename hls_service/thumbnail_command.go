@@ -11,7 +11,7 @@ import (
 	"github.com/cbstorm/wyrstream/lib/logger"
 )
 
-const THUMBNAIL_TIME_TICKER = 30 * time.Second
+const THUMBNAIL_TIME_TICKER = 10 * time.Second
 
 var process_thumbnail_cmd_store *ProcessThumbnailCommandStore
 var process_thumbnail_cmd_store_sync sync.Once
@@ -59,7 +59,6 @@ type ProcessThumbnailCommand struct {
 	stream_id string
 	input     []string
 	output    string
-	at_time   uint
 }
 
 func NewProcessThumbnailCommand(stream_id string) *ProcessThumbnailCommand {
@@ -71,32 +70,16 @@ func NewProcessThumbnailCommand(stream_id string) *ProcessThumbnailCommand {
 		logger:    logger.NewLogger(fmt.Sprintf("PROCESS_THUMBNAIL_CMD - %s", stream_id)),
 		name:      "ffmpeg",
 		args: []string{
-			"-v", "quiet",
+			"-v", "error",
 			"-q:v", "1",
-			"-update", "1",
-			"-skip_frame", "nokey",
 			"-frames:v", "1",
 		},
-		output:  BuildThumbnailFilePath(stream_id),
-		at_time: 1,
+		output: BuildThumbnailFilePath(stream_id),
 	}
 }
-func (c *ProcessThumbnailCommand) SetInput(i string) *ProcessThumbnailCommand {
+func (c *ProcessThumbnailCommand) setInput(i string) *ProcessThumbnailCommand {
 	c.input = []string{"-i", i}
 	return c
-}
-func (c *ProcessThumbnailCommand) updateAtTime() {
-	c.at_time = c.at_time + 20
-}
-
-func (c *ProcessThumbnailCommand) buildArgs() []string {
-	out := []string{}
-	out = append(out, c.input...)
-	out = append(out, "-ss", fmt.Sprintf("%d", c.at_time))
-	out = append(out, c.args...)
-	out = append(out, "-y")
-	out = append(out, c.output)
-	return out
 }
 
 func (c *ProcessThumbnailCommand) Start() {
@@ -116,8 +99,34 @@ func (c *ProcessThumbnailCommand) Start() {
 	}()
 }
 
+func (c *ProcessThumbnailCommand) getInput() string {
+	files := GetListSegmentFilesByStreamId(c.stream_id)
+	if len(*files) == 0 {
+		return ""
+	}
+	s := (*files)[len(*files)-1]
+	s = fmt.Sprintf("%s/%s", BuildHLSStreamDir(c.stream_id), s)
+	return s
+}
+
+func (c *ProcessThumbnailCommand) buildArgs() []string {
+	out := []string{}
+	out = append(out, c.input...)
+	out = append(out, c.args...)
+	out = append(out, "-y")
+	out = append(out, c.output)
+	return out
+}
+
 func (c *ProcessThumbnailCommand) run() error {
 	c.logger.Info("RUN")
+	input := c.getInput()
+	if input == "" {
+		c.logger.Info("EMPTY_SEGMENT")
+		return nil
+	}
+	c.setInput(input)
+	c.Print()
 	args := c.buildArgs()
 	cmd := exec.CommandContext(c.ctx, c.name, args...)
 	stderr, err := cmd.StderrPipe()
@@ -141,7 +150,6 @@ func (c *ProcessThumbnailCommand) run() error {
 		c.logger.Error("Could not wait for command complete with err: %v", err)
 		return err
 	}
-	c.updateAtTime()
 	c.Print()
 	c.logger.Info("DONE")
 	return nil

@@ -70,6 +70,7 @@ var _ = GetHttpServer().FeedRoute(&HTTPRoute{
 	Method:   POST,
 	Endpoint: "/streams",
 	Handlers: []func(*fiber.Ctx) error{
+		middlewares.Alert,
 		middlewares.AuthRole(enums.AUTH_ROLE_USER),
 		middlewares.BodyRequiredMiddleware,
 		func(c *fiber.Ctx) error {

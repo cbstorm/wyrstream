@@ -1,7 +1,6 @@
 package main
 
 import (
-	"strings"
 	"sync"
 
 	"github.com/cbstorm/wyrstream/lib/dtos"
@@ -45,7 +44,7 @@ func (s *HLSService) ProcessStart(input *dtos.HLSPublishStartInput) error {
 	hls_cmd := NewProcessHLSCommand(input.StreamId).SetStartNumber(s.getStartFileNumber(input.StreamId)).SetInput(stream_url)
 	GetProcessHLSCommandStore().Add(hls_cmd)
 	go hls_cmd.Run()
-	thumbnail_cmd := NewProcessThumbnailCommand(input.StreamId).SetInput(stream_url)
+	thumbnail_cmd := NewProcessThumbnailCommand(input.StreamId)
 	GetProcessThumbnailCommandStore().Add(thumbnail_cmd)
 	go thumbnail_cmd.Start()
 	return nil
@@ -68,11 +67,6 @@ func (s *HLSService) ProcessStop(input *dtos.HLSPublishStopInput) error {
 }
 
 func (s *HLSService) getStartFileNumber(stream_id string) uint {
-	files, err := utils.ListDirWithFilter(BuildHLSStreamDir(stream_id), func(f_name string) bool {
-		return strings.HasPrefix(f_name, SEGMENT_FILE_PREFIX) && strings.HasSuffix(f_name, SEGMENT_FILE_SUFFIX)
-	})
-	if err != nil {
-		return 0
-	}
-	return uint(len(files) + 1)
+	files := GetListSegmentFilesByStreamId(stream_id)
+	return uint(len(*files) + 1)
 }

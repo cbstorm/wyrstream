@@ -131,5 +131,4 @@ test-hls:
 	-start_number 1 \
 	hls_service/public/STR66E95B8E2/playlist.m3u8
 test-thumbnail:
-	ffmpeg -v error -i "srt://127.0.0.1:6000?streamid=/live/STR66EC7A942?key=Kw8kywlar6TFQTLWjzzuE5fit5xqLc" -q:v 1 -frames:v 1 tmp/STR66EC7A942.jpg
-
+	ffmpeg -v error -i hls_service/public/STR66EC7A661/seg-00004.ts -q:v 1 -frames:v 1 -y tmp/STR66EC7A942.jpg
