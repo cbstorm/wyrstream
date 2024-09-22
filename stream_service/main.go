@@ -32,5 +32,7 @@ func main() {
 	if err := s.LoadConfig(configs.GetConfig()); err != nil {
 		logg.Fatal("Could not load stream server config with err: %v", err)
 	}
-	s.Init().Listen()
+	s.Init()
+	s.ConfirmHealth()
+	s.Listen()
 }

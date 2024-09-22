@@ -50,8 +50,9 @@ type UserRefreshTokenOutput struct {
 }
 
 type CheckStreamKeyInput struct {
-	StreamId string `json:"stream_id"`
-	Key      string `json:"key"`
+	StreamServer string `json:"stream_server"`
+	StreamId     string `json:"stream_id"`
+	Key          string `json:"key"`
 }
 
 type CheckStreamKeyResponse struct {

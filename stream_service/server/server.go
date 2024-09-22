@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -9,9 +10,11 @@ import (
 	"os/signal"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/cbstorm/wyrstream/lib/dtos"
 	"github.com/cbstorm/wyrstream/lib/nats_service"
+	"github.com/cbstorm/wyrstream/lib/redis_service"
 	srt "github.com/datarhei/gosrt"
 )
 
@@ -36,17 +39,21 @@ func GetServer() *Server {
 }
 
 type Server struct {
-	addr        string
-	public_url  string
-	app         string
-	token       string
-	passphrase  string
-	logtopics   string
-	server      *srt.Server
-	channels    map[string]srt.PubSub
-	lock        sync.RWMutex
-	config      IStreamServerConfig
-	connections map[string][]srt.Conn
+	addr          string
+	public_url    string
+	app           string
+	token         string
+	passphrase    string
+	logtopics     string
+	server        *srt.Server
+	channels      map[string]srt.PubSub
+	lock          sync.RWMutex
+	config        IStreamServerConfig
+	connections   map[string][]srt.Conn
+	publish_count uint
+
+	redis_service *redis_service.RedisService
+	nats_service  *nats_service.NATS_Service
 }
 
 func (s *Server) LoadConfig(config IStreamServerConfig) error {
@@ -70,6 +77,10 @@ func (s *Server) Init() *Server {
 	s.public_url = s.config.SERVER_PUBLIC_URL()
 	s.app = "/live/"
 	s.channels = make(map[string]srt.PubSub)
+
+	// deps
+	s.redis_service = redis_service.GetRedisService()
+	s.nats_service = nats_service.GetNATSService()
 	return s
 }
 
@@ -322,28 +333,32 @@ func (s *Server) onConnect(stream_id, key string, mode srt.ConnType) error {
 }
 
 func (s *Server) onPublish(stream_id, publish_key string) error {
-	input := dtos.CheckStreamKeyInput{
-		StreamId: stream_id,
-		Key:      publish_key,
+	input := &dtos.CheckStreamKeyInput{
+		StreamServer: s.public_url,
+		StreamId:     stream_id,
+		Key:          publish_key,
 	}
 	result := &dtos.CheckStreamKeyResponse{}
-	_, err := nats_service.GetNATSService().Request(nats_service.AUTH_STREAM_CHECK_PUBLISH_KEY, input, nats_service.WithOutput(result))
+	_, err := s.nats_service.Request(nats_service.AUTH_STREAM_CHECK_PUBLISH_KEY, input, nats_service.WithOutput(result))
 	if err != nil {
 		return err
 	}
 	if !result.Ok {
-		return fmt.Errorf("publish key invalid")
+		return errors.New("publish key invalid")
 	}
 	return nil
 }
 
 func (s *Server) onPublishStart(stream_id string) error {
+	s.lock.Lock()
+	s.publish_count++
+	s.lock.Unlock()
 	input := &dtos.HLSPublishStartInput{
 		StreamId:        stream_id,
 		StreamServer:    s.public_url,
 		StreamServerApp: s.app,
 	}
-	_, err := nats_service.GetNATSService().Request(nats_service.HLS_PUBLISH_START, input)
+	_, err := s.nats_service.Request(nats_service.HLS_PUBLISH_START, input)
 	if err != nil {
 		return err
 	}
@@ -351,10 +366,13 @@ func (s *Server) onPublishStart(stream_id string) error {
 }
 
 func (s *Server) onPublishStop(stream_id string) {
+	s.lock.Lock()
+	s.publish_count--
+	s.lock.Unlock()
 	input := &dtos.HLSPublishStopInput{
 		StreamId: stream_id,
 	}
-	_, err := nats_service.GetNATSService().Request(nats_service.HLS_PUBLISH_STOP.Concat(input.StreamId), input)
+	_, err := s.nats_service.Request(nats_service.HLS_PUBLISH_STOP.Concat(input.StreamId), input)
 	if err != nil {
 		log.Printf("Could not emit publish stop event of stream %s with err: %v", stream_id, err)
 	}
@@ -362,11 +380,12 @@ func (s *Server) onPublishStop(stream_id string) {
 
 func (s *Server) onSubscribe(stream_id, subscribe_key string) error {
 	input := dtos.CheckStreamKeyInput{
-		StreamId: stream_id,
-		Key:      subscribe_key,
+		StreamServer: s.public_url,
+		StreamId:     stream_id,
+		Key:          subscribe_key,
 	}
 	result := &dtos.CheckStreamKeyResponse{}
-	_, err := nats_service.GetNATSService().Request(nats_service.AUTH_STREAM_CHECK_SUBSCRIBE_KEY, input, nats_service.WithOutput(result))
+	_, err := s.nats_service.Request(nats_service.AUTH_STREAM_CHECK_SUBSCRIBE_KEY, input, nats_service.WithOutput(result))
 	if err != nil {
 		return err
 	}
@@ -377,12 +396,38 @@ func (s *Server) onSubscribe(stream_id, subscribe_key string) error {
 }
 
 func (s *Server) TerminateStream(stream_id string) {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
 	conns := s.connections[stream_id]
 	for _, c := range conns {
 		if err := c.Close(); err != nil {
 			log.Printf("Could not close conn with error: %v", err)
 		}
 	}
+}
+
+func (s *Server) ConfirmHealth() {
+	d := 5 * time.Second
+	ticker := time.NewTicker(d)
+	t := func() error {
+		if err := s.redis_service.SetWithTtl(redis_service.REDIS_KEY_STREAM_SERVER_HEALTH.Concat(s.public_url), s.publish_count, d); err != nil {
+			log.Printf("Could not confirm health with err: %v", err)
+			return err
+		}
+		return nil
+	}
+	if err := t(); err != nil {
+		return
+	}
+	go func() {
+		defer ticker.Stop()
+		for {
+			<-ticker.C
+			if err := t(); err != nil {
+				break
+			}
+		}
+	}()
 }
 
 func (s *Server) BuildStreamSubscribeUrl(stream_id string, key string) string {

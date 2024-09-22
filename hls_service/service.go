@@ -37,7 +37,7 @@ func (s *HLSService) ProcessStart(input *dtos.HLSPublishStartInput) error {
 		return err
 	}
 	stream := entities.NewStreamEntity()
-	if err := repositories.GetStreamRepository().UpdatePublishStartByStreamId(input.StreamId, hls_url, thumbnail_url, stream); err != nil {
+	if err := repositories.GetStreamRepository().UpdatePublishStartByStreamId(input.StreamId, input.StreamServer, hls_url, thumbnail_url, stream); err != nil {
 		return err
 	}
 	stream_url := BuildStreamURL(input.StreamServer, input.StreamServerApp, input.StreamId, stream.SubscribeKey)
