@@ -15,6 +15,8 @@ type StreamEntity struct {
 	PublisherId     primitive.ObjectID `bson:"publisher_id,omitempty" json:"publisher_id,omitempty"`
 	Title           string             `bson:"title" json:"title"`
 	Description     string             `bson:"description" json:"description"`
+	EnableRecord    bool               `bson:"enable_record" json:"enable_record"`
+	StreamServerUrl string             `bson:"stream_server_url" json:"stream_server_url"`
 	StreamId        string             `bson:"stream_id" json:"stream_id"`
 	PublishKey      string             `bson:"publish_key" json:"-"`
 	SubscribeKey    string             `bson:"subscribe_key" json:"-"`
@@ -25,7 +27,8 @@ type StreamEntity struct {
 	ThumbnailUrl    string             `bson:"thumbnail_url" json:"thumbnail_url"`
 	GuidanceCommand string             `bson:"guidance_command" json:"guidance_command"`
 
-	StreamLogs []*StreamLogEntity `bson:"-" json:"stream_logs"`
+	PublishStreamUrl string              `bson:"-" json:"stream_url"`
+	StreamLogs       *[]*StreamLogEntity `bson:"-" json:"stream_logs"`
 }
 
 func NewStreamEntity() *StreamEntity {

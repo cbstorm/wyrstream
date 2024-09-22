@@ -104,6 +104,12 @@ func (svc *AuthService) UserRefreshToken(input *dtos.UserRefreshTokenInput) (*dt
 	if refresh_token_payload["token"] != utils.MD5Sum(input.AccesssToken) {
 		return nil, exceptions.Err_UNAUTHORIZED().SetMessage("UNAUTHORIZED")
 	}
+	if err := helpers.CheckBlacklist(input.RefreshToken); err != nil {
+		return nil, exceptions.Err_UNAUTHORIZED().SetMessage("UNAUTHORIZED")
+	}
+	if err := helpers.SaveBlacklist(input.RefreshToken, enums.TOKEN_TYPE_REFRESH_TOKEN); err != nil {
+		return nil, err
+	}
 	id := refresh_token_payload["_id"].(string)
 	objId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {

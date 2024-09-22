@@ -48,17 +48,18 @@ func (s *ProcessHLSCommandStore) Remove(stream_id string) {
 }
 
 type ProcessHLSCommand struct {
-	ctx       context.Context
-	cancelFn  context.CancelFunc
-	name      string
-	args      []string
-	logger    *logger.Logger
-	stream_id string
-	input     []string
-	output    string
+	ctx           context.Context
+	cancelFn      context.CancelFunc
+	name          string
+	args          []string
+	logger        *logger.Logger
+	stream_id     string
+	input         []string
+	output        string
+	enable_record bool
 }
 
-func NewProcessHLSCommand(stream_id string) *ProcessHLSCommand {
+func NewProcessHLSCommand(stream_id string, enable_record bool) *ProcessHLSCommand {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &ProcessHLSCommand{
 		ctx:       ctx,
@@ -100,6 +101,9 @@ func (c *ProcessHLSCommand) buildArgs() []string {
 	out := []string{}
 	out = append(out, c.input...)
 	out = append(out, c.args...)
+	if c.enable_record {
+		out = append(out, "-hls_flags", "delete_segments")
+	}
 	out = append(out, c.output)
 	return out
 }

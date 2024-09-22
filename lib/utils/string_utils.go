@@ -59,7 +59,7 @@ func UniqObjectId(ids *[]primitive.ObjectID) []primitive.ObjectID {
 	hex_ids := Map(ids, func(i primitive.ObjectID, idx int) string {
 		return i.Hex()
 	})
-	uniq_ids := Uniq(&hex_ids)
+	uniq_ids := Uniq(hex_ids)
 	uniq_obj_ids := []primitive.ObjectID{}
 	for _, v := range uniq_ids {
 		obj_id, err := primitive.ObjectIDFromHex(v)

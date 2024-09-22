@@ -62,6 +62,7 @@ func (svc *StreamService) CreateOneStream(input *dtos.CreateOneStreamInput, reqC
 	stream.PublisherId = reqCtx.GetObjId()
 	stream.Title = input.Title
 	stream.Description = input.Description
+	stream.EnableRecord = input.EnableRecord
 	stream.GenerateStreamId().GeneratePublishKey().GenerateSubscribeKey().MakeGuidanceCommand()
 	if err := repositories.GetStreamRepository().InsertOne(stream); err != nil {
 		return nil, err

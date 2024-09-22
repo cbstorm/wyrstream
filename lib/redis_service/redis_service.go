@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/cbstorm/wyrstream/lib/logger"
+	"github.com/cbstorm/wyrstream/lib/utils"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -36,7 +37,7 @@ func GetRedisService() *RedisService {
 
 type RedisService struct {
 	rdb        *redis.Client
-	key_prefix string
+	key_prefix RedisKey
 	logger     *logger.Logger
 	config     IRedisConfig
 }
@@ -62,7 +63,7 @@ func (i *RedisService) Connect() error {
 		return err
 	}
 	i.rdb = rdb
-	i.key_prefix = i.config.REDIS_KEY_PREFIX()
+	i.key_prefix = RedisKey(i.config.REDIS_KEY_PREFIX())
 	i.logger.Info("Connected to redis successfully")
 	return nil
 }
@@ -71,38 +72,38 @@ func (i *RedisService) Close() error {
 	return i.rdb.Close()
 }
 
-func (i *RedisService) Set(key string, value interface{}) error {
-	byteValue, err := json.Marshal(value)
+func (i *RedisService) Set(key RedisKey, value interface{}) error {
+	byte_value, err := json.Marshal(value)
 	if err != nil {
 		return err
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 	defer cancel()
-	_, err = i.rdb.Set(ctx, i.getKey(key), string(byteValue), 0).Result()
+	_, err = i.rdb.Set(ctx, i.getKey(key).String(), string(byte_value), 0).Result()
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (i *RedisService) SetWithTtl(key string, value interface{}, second time.Duration) error {
-	byteValue, err := json.Marshal(value)
+func (i *RedisService) SetWithTtl(key RedisKey, value interface{}, ttl time.Duration) error {
+	byte_value, err := json.Marshal(value)
 	if err != nil {
 		return err
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 	defer cancel()
-	_, err = i.rdb.Set(ctx, i.getKey(key), string(byteValue), second).Result()
+	_, err = i.rdb.Set(ctx, i.getKey(key).String(), string(byte_value), ttl).Result()
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (i *RedisService) Get(key string, out interface{}) (error, bool) {
+func (i *RedisService) Get(key RedisKey, out interface{}) (error, bool) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 	defer cancel()
-	value, err := i.rdb.Get(ctx, i.getKey(key)).Result()
+	value, err := i.rdb.Get(ctx, i.getKey(key).String()).Result()
 	if err != nil && err == redis.Nil {
 		return nil, true
 	}
@@ -117,6 +118,32 @@ func (i *RedisService) Get(key string, out interface{}) (error, bool) {
 	return nil, false
 }
 
-func (i *RedisService) getKey(k string) string {
-	return fmt.Sprintf("%s:%s", i.key_prefix, k)
+func (i *RedisService) MGet(keys []RedisKey, out interface{}) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	defer cancel()
+	k := utils.Map(&keys, func(a RedisKey, b int) string {
+		return a.String()
+	})
+	cmd := i.rdb.MGet(ctx, (*k)...)
+	if cmd.Err() != nil {
+		return cmd.Err()
+	}
+	if err := cmd.Scan(out); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (i *RedisService) Incr(key RedisKey) (int64, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	defer cancel()
+	value, err := i.rdb.Incr(ctx, i.getKey(key).String()).Result()
+	if err != nil {
+		return 0, err
+	}
+	return value, nil
+}
+
+func (i *RedisService) getKey(k RedisKey) RedisKey {
+	return i.key_prefix.ConcatKey(k)
 }

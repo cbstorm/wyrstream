@@ -4,20 +4,20 @@ import (
 	"fmt"
 )
 
-func Map[K any, V any](list *[]K, f func(e K, idx int) V) []V {
+func Map[K any, V any](list *[]K, f func(e K, idx int) V) *[]V {
 	n := make([]V, len(*list))
 	for i, e := range *list {
 		n[i] = f(e, i)
 	}
-	return n
+	return &n
 }
 
-func Flat[K any](list *[][]K) []K {
+func Flat[K any](list *[][]K) *[]K {
 	out := make([]K, 0)
 	for i := range *list {
 		out = append(out, (*list)[i]...)
 	}
-	return out
+	return &out
 }
 
 func ForEach[K any](list *[]K, f func(e K, idx int)) {
@@ -26,14 +26,14 @@ func ForEach[K any](list *[]K, f func(e K, idx int)) {
 	}
 }
 
-func Filter[K any](list *[]K, f func(e K, idx int) bool) []K {
+func Filter[K any](list *[]K, f func(e K, idx int) bool) *[]K {
 	n := make([]K, 0)
 	for i, e := range *list {
 		if f(e, i) {
 			n = append(n, e)
 		}
 	}
-	return n
+	return &n
 }
 
 func Find[K any](list *[]K, f func(e K) bool) (K, bool) {
@@ -150,14 +150,14 @@ func Every[K any](list *[]K, f func(a K) bool) bool {
 	return true
 }
 
-func GroupBy[K any](list *[]K, f func(a K) string) *map[string][]K {
-	out := make(map[string][]K)
+func GroupBy[K any](list *[]K, f func(a K) string) *map[string]*[]K {
+	out := make(map[string]*[]K)
 	for _, v := range *list {
 		key := f(v)
 		if out[key] == nil {
-			out[key] = []K{}
+			out[key] = &[]K{}
 		}
-		out[key] = append(out[key], v)
+		*(out[key]) = append(*(out[key]), v)
 	}
 	return &out
 }

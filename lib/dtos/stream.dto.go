@@ -9,8 +9,9 @@ import (
 )
 
 type CreateOneStreamInput struct {
-	Title       string `json:"title,omitempty" validate:"required,min_length=6,max_length=50"`
-	Description string `json:"description,omitempty" validate:"required,min_length=6,max_length=255"`
+	Title        string `json:"title,omitempty" validate:"required,min_length=6,max_length=50"`
+	Description  string `json:"description,omitempty" validate:"required,min_length=6,max_length=255"`
+	EnableRecord bool   `json:"enable_record"`
 }
 
 func (i *CreateOneStreamInput) Validate() error {

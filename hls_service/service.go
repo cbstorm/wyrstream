@@ -41,7 +41,7 @@ func (s *HLSService) ProcessStart(input *dtos.HLSPublishStartInput) error {
 		return err
 	}
 	stream_url := BuildStreamURL(input.StreamServer, input.StreamServerApp, input.StreamId, stream.SubscribeKey)
-	hls_cmd := NewProcessHLSCommand(input.StreamId).SetStartNumber(s.getStartFileNumber(input.StreamId)).SetInput(stream_url)
+	hls_cmd := NewProcessHLSCommand(input.StreamId, stream.EnableRecord).SetStartNumber(s.getStartFileNumber(input.StreamId)).SetInput(stream_url)
 	GetProcessHLSCommandStore().Add(hls_cmd)
 	go hls_cmd.Run()
 	thumbnail_cmd := NewProcessThumbnailCommand(input.StreamId)

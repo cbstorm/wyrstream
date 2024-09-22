@@ -27,23 +27,26 @@ var instance_sync sync.Once
 func GetServer() *Server {
 	if instance == nil {
 		instance_sync.Do(func() {
-			instance = &Server{}
+			instance = &Server{
+				connections: make(map[string][]srt.Conn),
+			}
 		})
 	}
 	return instance
 }
 
 type Server struct {
-	addr       string
-	public_url string
-	app        string
-	token      string
-	passphrase string
-	logtopics  string
-	server     *srt.Server
-	channels   map[string]srt.PubSub
-	lock       sync.RWMutex
-	config     IStreamServerConfig
+	addr        string
+	public_url  string
+	app         string
+	token       string
+	passphrase  string
+	logtopics   string
+	server      *srt.Server
+	channels    map[string]srt.PubSub
+	lock        sync.RWMutex
+	config      IStreamServerConfig
+	connections map[string][]srt.Conn
 }
 
 func (s *Server) LoadConfig(config IStreamServerConfig) error {
@@ -212,6 +215,7 @@ func (s *Server) handlePublish(conn srt.Conn) {
 		return
 	}
 	channel := u.Path
+	// Remove app prefix
 	stream_id := strings.TrimPrefix(channel, s.app)
 	key := u.Query().Get("key")
 	if key == "" {
@@ -244,6 +248,8 @@ func (s *Server) handlePublish(conn srt.Conn) {
 		conn.Close()
 		return
 	}
+	// Append connection by stream_id
+	s.connections[stream_id] = append(s.connections[stream_id], conn)
 	s.log("PUBLISH", "START", channel, "publishing", client)
 
 	pubsub.Publish(conn)
@@ -285,6 +291,8 @@ func (s *Server) handleSubscribe(conn srt.Conn) {
 		conn.Close()
 		return
 	}
+	// Append connection by stream_id
+	s.connections[stream_id] = append(s.connections[stream_id], conn)
 	s.log("SUBSCRIBE", "START", channel, "", client)
 
 	s.lock.RLock()
@@ -366,6 +374,15 @@ func (s *Server) onSubscribe(stream_id, subscribe_key string) error {
 		return fmt.Errorf("subscribe key invalid")
 	}
 	return nil
+}
+
+func (s *Server) TerminateStream(stream_id string) {
+	conns := s.connections[stream_id]
+	for _, c := range conns {
+		if err := c.Close(); err != nil {
+			log.Printf("Could not close conn with error: %v", err)
+		}
+	}
 }
 
 func (s *Server) BuildStreamSubscribeUrl(stream_id string, key string) string {

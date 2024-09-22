@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes"
 	"crypto/md5"
+	"crypto/sha512"
 	"encoding/gob"
 	"encoding/hex"
 	"encoding/json"
@@ -57,9 +58,14 @@ func Haversine(lat1 float64, lon1 float64, lat2 float64, lon2 float64) float64 {
 	return distance
 }
 
-func MD5Sum(str string) string {
-	token_sum := md5.Sum([]byte(str))
-	return hex.EncodeToString(token_sum[:])
+func MD5Sum(s string) string {
+	sum := md5.Sum([]byte(s))
+	return hex.EncodeToString(sum[:])
+}
+
+func SHA512Sum(s string) string {
+	sum := sha512.Sum512([]byte(s))
+	return hex.EncodeToString(sum[:])
 }
 
 func IsValidEmailAddress(email string) bool {
