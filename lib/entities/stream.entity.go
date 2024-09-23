@@ -24,6 +24,7 @@ type StreamEntity struct {
 	StoppedAt       time.Time          `bson:"stopped_at,omitempty" json:"stopped_at,omitempty"`
 	HLSUrl          string             `bson:"hls_url" json:"hls_url"`
 	ThumbnailUrl    string             `bson:"thumbnail_url" json:"thumbnail_url"`
+	HLSSegmentCount uint               `bson:"hls_segment_count" json:"hls_segment_count"`
 	GuidanceCommand string             `bson:"guidance_command" json:"guidance_command"`
 
 	PublishStreamUrl string              `bson:"-" json:"stream_url"`

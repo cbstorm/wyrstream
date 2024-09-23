@@ -26,6 +26,21 @@ services:
     restart: unless-stopped
     networks:
       - wyrstream
+  minio:
+    image: bitnami/minio:latest
+    container_name: minio
+    ports:
+      - 9000:9000
+      - 9001:9001
+    volumes:
+      - ./.opt/minio_data:/bitnami/minio/data
+    environment:
+      - MINIO_ROOT_USER=OKqZVj08DLcj80fS7LuNYWw5ljsWQ8e0NcXv0q+h
+      - MINIO_ROOT_PASSWORD=UJiQP8Q7ds72PuPv988WY42+2ZhBucefv6bPgwYY
+      - MINIO_DEFAULT_BUCKETS=wyrstream
+    restart: unless-stopped
+    networks:
+      - wyrstream
 networks:
   wyrstream:
     driver: bridge

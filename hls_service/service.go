@@ -1,11 +1,14 @@
 package main
 
 import (
+	"fmt"
+	"os"
 	"sync"
 
 	"github.com/cbstorm/wyrstream/lib/dtos"
 	"github.com/cbstorm/wyrstream/lib/entities"
 	"github.com/cbstorm/wyrstream/lib/logger"
+	"github.com/cbstorm/wyrstream/lib/minio_service"
 	"github.com/cbstorm/wyrstream/lib/repositories"
 	"github.com/cbstorm/wyrstream/lib/utils"
 )
@@ -37,11 +40,11 @@ func (s *HLSService) ProcessStart(input *dtos.HLSPublishStartInput) error {
 		return err
 	}
 	stream := entities.NewStreamEntity()
-	if err := repositories.GetStreamRepository().UpdatePublishStartByStreamId(input.StreamId, input.StreamServer, hls_url, thumbnail_url, stream); err != nil {
+	if err := s.stream_repository.UpdatePublishStartByStreamId(input.StreamId, input.StreamServer, hls_url, thumbnail_url, stream); err != nil {
 		return err
 	}
 	stream_url := BuildStreamURL(input.StreamServer, input.StreamServerApp, input.StreamId, stream.SubscribeKey)
-	hls_cmd := NewProcessHLSCommand(input.StreamId, stream.EnableRecord).SetStartNumber(s.getStartFileNumber(input.StreamId)).SetInput(stream_url)
+	hls_cmd := NewProcessHLSCommand(input.StreamId, stream.EnableRecord).SetStartNumber(stream.HLSSegmentCount + 1).SetInput(stream_url)
 	GetProcessHLSCommandStore().Add(hls_cmd)
 	go hls_cmd.Run()
 	thumbnail_cmd := NewProcessThumbnailCommand(input.StreamId)
@@ -59,14 +62,53 @@ func (s *HLSService) ProcessStop(input *dtos.HLSPublishStopInput) error {
 		thumbnail_cmd.Cancel()
 		GetProcessThumbnailCommandStore().Remove(input.StreamId)
 	}
+	hls_segment_count := uint(len(*GetListSegmentFilesByStreamId(input.StreamId)))
 	stream := entities.NewStreamEntity()
-	if err := repositories.GetStreamRepository().UpdatePublishStopByStreamId(input.StreamId, stream); err != nil {
+	if err := s.stream_repository.UpdatePublishStopByStreamId(input.StreamId, hls_segment_count, stream); err != nil {
+		return err
+	}
+	if stream.EnableRecord {
+		s.logger.Info("start put segments done...")
+		s.putSegmentsToStorage(input.StreamId)
+		s.logger.Info("put segments done...")
+	}
+	s.putThumbnailToStorage(input.StreamId)
+	if err := s.cleanStreamDir(input.StreamId); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *HLSService) getStartFileNumber(stream_id string) uint {
-	files := GetListSegmentFilesByStreamId(stream_id)
-	return uint(len(*files) + 1)
+func (s *HLSService) putSegmentsToStorage(stream_id string) {
+	segments := GetListSegmentFilesByStreamId(stream_id)
+	seg_objs := utils.Map(segments, func(a string, b int) minio_service.MinIOFObject {
+		return &minio_service.HLSSegmentObject{
+			StreamId: stream_id,
+			Name:     a,
+			Path:     fmt.Sprintf("%s/%s", BuildHLSStreamDir(stream_id), a),
+		}
+	})
+	res := minio_service.GetMinioService().FPutObjects(seg_objs)
+	for _, v := range *res {
+		if v.Error != nil {
+			s.logger.Error("Could not fput object %s due to an  error: %v", v.ObjectName, v.Error)
+		}
+	}
+}
+
+func (s *HLSService) putThumbnailToStorage(stream_id string) (string, error) {
+	obj := &minio_service.StreamThumbnailObject{
+		StreamId: stream_id,
+		Path:     BuildThumbnailFilePath(stream_id),
+	}
+	return minio_service.GetMinioService().FPutObject(obj)
+}
+
+func (s *HLSService) cleanStreamDir(stream_id string) error {
+	p := BuildHLSStreamDir(stream_id)
+	if err := os.RemoveAll(p); err != nil {
+		s.logger.Error("Could not remove dir %s due to an error: %v", p, err)
+		return err
+	}
+	return nil
 }

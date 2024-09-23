@@ -59,6 +59,14 @@ type Config struct {
 	// Stream server
 	stream_server_addr       string
 	stream_server_public_url string
+
+	// MinIO
+	minio_host        string
+	minio_port        uint16
+	minio_access_key  string
+	minio_secret_key  string
+	minio_bucket_name string
+	minio_public_url  string
 }
 
 func (c *Config) Load() error {
@@ -236,4 +244,53 @@ func (c *Config) HLS_HTTP_PORT() uint16 {
 }
 func (c *Config) HLS_PUBLIC_URL() string {
 	return c.hls_public_url
+}
+
+// Minio config
+func (c *Config) LoadMinioConfig() error {
+	c.minio_host = os.Getenv("MINIO_HOST")
+	if c.minio_host == "" {
+		return errors.New("required MINIO_HOST")
+	}
+	port, err := strconv.ParseUint(os.Getenv("MINIO_PORT"), 10, 16)
+	if err != nil {
+		return errors.New("invalid MINIO_PORT")
+	}
+	c.minio_port = uint16(port)
+	c.minio_access_key = os.Getenv("MINIO_ACCESS_KEY")
+	if c.minio_access_key == "" {
+		return errors.New("required MINIO_ACCESS_KEY")
+	}
+	c.minio_secret_key = os.Getenv("MINIO_SECRET_KEY")
+	if c.minio_secret_key == "" {
+		return errors.New("required MINIO_SECRET_KEY")
+	}
+	c.minio_bucket_name = os.Getenv("MINIO_BUCKET_NAME")
+	if c.minio_bucket_name == "" {
+		return errors.New("required MINIO_BUCKET_NAME")
+	}
+	c.minio_public_url = os.Getenv("MINIO_PUBLIC_URL")
+	if c.minio_public_url == "" {
+		return errors.New("required MINIO_PUBLIC_URL")
+	}
+	return nil
+}
+func (c *Config) MINIO_HOST() string {
+	return c.minio_host
+}
+func (c *Config) MINIO_PORT() uint16 {
+	return c.minio_port
+}
+func (c *Config) MINIO_ACCESS_KEY() string {
+	return c.minio_access_key
+}
+func (c *Config) MINIO_SECRET_KEY() string {
+	return c.minio_secret_key
+}
+func (c *Config) MINIO_BUCKET_NAME() string {
+	return c.minio_bucket_name
+}
+
+func (c *Config) MINIO_PUBLIC_URL() string {
+	return c.minio_public_url
 }

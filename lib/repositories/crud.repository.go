@@ -19,6 +19,9 @@ type CRUDOption struct {
 	bulkWriteOrder  bool
 	bulkWriteUpsert bool
 	sort            map[string]interface{}
+
+	push interface{}
+	incr interface{}
 }
 
 func _NewCRUDOption() *CRUDOption {
@@ -48,6 +51,18 @@ func WithBulkWriteUpsert(bulkWriteUpsert bool) CURDOptionFunc {
 func WithSort(sort map[string]interface{}) CURDOptionFunc {
 	return func(c *CRUDOption) {
 		c.sort = sort
+	}
+}
+
+func WithPush(push interface{}) CURDOptionFunc {
+	return func(c *CRUDOption) {
+		c.push = push
+	}
+}
+
+func WithIncr(incr interface{}) CURDOptionFunc {
+	return func(c *CRUDOption) {
+		c.incr = incr
 	}
 }
 
@@ -163,7 +178,14 @@ func (r *CRUDRepository[T]) UpdateOne(filter map[string]interface{}, update inte
 		ctx = o.ctx
 	}
 	update_opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
-	result := r.collection.FindOneAndUpdate(ctx, bson.M(filter), bson.M{"$set": update}, update_opts)
+	u := bson.M{"$set": update}
+	if o.push != nil {
+		u["$push"] = o.push
+	}
+	if o.incr != nil {
+		u["$inc"] = o.incr
+	}
+	result := r.collection.FindOneAndUpdate(ctx, bson.M(filter), u, update_opts)
 	if result.Err() != nil {
 		return result.Err()
 	}

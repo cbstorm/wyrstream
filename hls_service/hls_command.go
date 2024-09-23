@@ -83,7 +83,8 @@ func NewProcessHLSCommand(stream_id string, enable_record bool) *ProcessHLSComma
 			"-force_key_frames", "expr:gte(t,n_forced*5)",
 			"-hls_segment_filename", BuildHLSSegmentFilePath(stream_id),
 		},
-		output: BuildHLSm3u8FilePath(stream_id),
+		output:        BuildHLSm3u8FilePath(stream_id),
+		enable_record: enable_record,
 	}
 }
 
@@ -101,7 +102,7 @@ func (c *ProcessHLSCommand) buildArgs() []string {
 	out := []string{}
 	out = append(out, c.input...)
 	out = append(out, c.args...)
-	if c.enable_record {
+	if !c.enable_record {
 		out = append(out, "-hls_flags", "delete_segments")
 	}
 	out = append(out, c.output)

@@ -67,15 +67,20 @@ func (r *StreamRepository) UpdatePublishStartByStreamId(stream_id, stream_server
 	}, opts...)
 }
 
-func (r *StreamRepository) UpdatePublishStopByStreamId(stream_id string, out *entities.StreamEntity, opts ...CURDOptionFunc) error {
+func (r *StreamRepository) UpdatePublishStopByStreamId(stream_id string, hls_segment_count uint, out *entities.StreamEntity, opts ...CURDOptionFunc) error {
 	return r.WithTransaction(func(ctx mongo.SessionContext) error {
 		// Update stream
-		if err := r.UpdateOne(map[string]interface{}{
-			"stream_id": stream_id,
-		}, map[string]interface{}{
-			"is_publishing": false,
-			"stopped_at":    time.Now().UTC(),
-		}, out, WithContext(ctx)); err != nil {
+		if err := r.UpdateOne(
+			map[string]interface{}{
+				"stream_id": stream_id,
+			},
+			map[string]interface{}{
+				"is_publishing": false,
+				"stopped_at":    time.Now().UTC(),
+			},
+			out,
+			WithIncr(map[string]interface{}{"hls_segment_count": hls_segment_count}),
+			WithContext(ctx)); err != nil {
 			return err
 		}
 		// Insert stream log

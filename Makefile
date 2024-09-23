@@ -79,6 +79,12 @@ mkenv:
 	REDIS_PORT=\n \
 	REDIS_KEY_PREFIX=\n \
 	DISCORD_BOT_TOKEN=\n \
+	MINIO_HOST=\n \
+	MINIO_PORT=\n \
+	MINIO_ACCESS_KEY=\n \
+	MINIO_SECRET_KEY=\n \
+	MINIO_BUCKET_NAME=\n \
+	MINIO_PUBLIC_URL=\n \
 	> .env
 setup: mkenv
 test:
@@ -109,7 +115,7 @@ test-pub:
     -maxrate:v 2M \
     -bufsize:v 1M \
     -preset ultrafast \
-	-f mpegts "srt://127.0.0.1:6000?streamid=publish:/live/STR66EC7A661?key=vgkiBNwfpiR7d0fA817C1jd8JwBpsh"
+	-f mpegts "srt://127.0.0.1:6001?streamid=publish:/live/STR66F0BBE31?key=EEEEEEEEEEEEEEEEEEEEEEsqqqqqqq"
 test-sub:
 	ffplay -v quiet -f mpegts -transtype live -i "srt://127.0.0.1:6000?streamid=/live/STR66E95B8E2?key=0MRWUlRLHSViEddcmOtKLMDYann1st"
 test-play-hls:
