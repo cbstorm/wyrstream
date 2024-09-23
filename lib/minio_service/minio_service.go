@@ -134,8 +134,7 @@ func (m *MinIOService) FPutObjects(objects *[]MinIOFObject) *[]*BulkPutObjectRes
 		}(e)
 	}
 	result := make([]*BulkPutObjectResult, 0)
-	for i := 0; i < no_obj; i++ {
-		r := <-upload_ch
+	for r := range upload_ch {
 		result = append(result, r)
 	}
 	return &result
@@ -178,6 +177,27 @@ func (m *MinIOService) PutObjects(objects *[]MinIOObject) (*[]*BulkPutObjectResu
 	result := make([]*BulkPutObjectResult, 0)
 	for r := range upload_ch {
 		result = append(result, r)
+	}
+	return &result, nil
+}
+
+func (m *MinIOService) ListDir(dir string, opts ...MinIOOptionFunc) (*[]string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	mio := &MinIOOption{}
+	for _, f := range opts {
+		f(mio)
+	}
+	if mio.ctx != nil {
+		cancel()
+		ctx = mio.ctx
+	}
+	objs := m.client.ListObjects(ctx, m.bucket_name, minio.ListObjectsOptions{
+		Prefix: dir,
+	})
+	result := make([]string, 0)
+	for o := range objs {
+		result = append(result, o.Key)
 	}
 	return &result, nil
 }

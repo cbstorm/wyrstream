@@ -12,7 +12,7 @@ type HLSSegmentObject struct {
 }
 
 func (h *HLSSegmentObject) ObjectName() string {
-	return fmt.Sprintf("streams/%s/%s", h.StreamId, h.Name)
+	return fmt.Sprintf("streams/%s/segments/%s", h.StreamId, h.Name)
 }
 
 func (h *HLSSegmentObject) FilePath() string {
@@ -29,7 +29,7 @@ type StreamThumbnailObject struct {
 }
 
 func (s *StreamThumbnailObject) ObjectName() string {
-	return fmt.Sprintf("thumbnails/%s/%s", s.StreamId, "thumbnail.jpg")
+	return fmt.Sprintf("streams/%s/thumbnails/%s", s.StreamId, "thumbnail.jpg")
 }
 func (s *StreamThumbnailObject) FilePath() string {
 	return s.Path
