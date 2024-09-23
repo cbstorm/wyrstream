@@ -234,7 +234,7 @@ func (s *Server) handlePublish(conn srt.Conn) {
 		return
 	}
 	if err := s.onPublish(stream_id, key); err != nil {
-		s.log("PUBLISH", "ON_PUBLISH_ERROR", channel, "", client)
+		s.log("PUBLISH", "ON_PUBLISH_ERROR", channel, err.Error(), client)
 		conn.Close()
 		return
 	}
@@ -255,7 +255,7 @@ func (s *Server) handlePublish(conn srt.Conn) {
 
 	// Emit START event
 	if err := s.onPublishStart(stream_id); err != nil {
-		s.log("PUBLISH", "EMIT_START_EVENT", channel, "publishing", client)
+		s.log("PUBLISH", "EMIT_START_EVENT", channel, err.Error(), client)
 		conn.Close()
 		return
 	}

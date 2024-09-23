@@ -15,6 +15,12 @@ func NewLogger(ns string) *Logger {
 	}
 }
 
+func (l *Logger) Child(ns string) *Logger {
+	return &Logger{
+		Namespace: fmt.Sprintf("%s] - [%s", l.Namespace, ns),
+	}
+}
+
 func (l *Logger) Info(format string, v ...any) {
 	log.Printf("[%s] - [INFO] |> %s", l.Namespace, fmt.Sprintf(format, v...))
 }

@@ -15,6 +15,7 @@ type StreamEntity struct {
 	Title           string             `bson:"title" json:"title"`
 	Description     string             `bson:"description" json:"description"`
 	EnableRecord    bool               `bson:"enable_record" json:"enable_record"`
+	ReadyForVOD     bool               `bson:"ready_for_vod" json:"ready_for_vod"`
 	StreamServerUrl string             `bson:"stream_server_url" json:"stream_server_url"`
 	StreamId        string             `bson:"stream_id" json:"stream_id"`
 	PublishKey      string             `bson:"publish_key" json:"-"`

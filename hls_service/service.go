@@ -54,6 +54,7 @@ func (s *HLSService) ProcessStart(input *dtos.HLSPublishStartInput) error {
 }
 
 func (s *HLSService) ProcessStop(input *dtos.HLSPublishStopInput) error {
+	logg := s.logger.Child(input.StreamId)
 	if hls_cmd := GetProcessHLSCommandStore().Get(input.StreamId); hls_cmd != nil {
 		hls_cmd.Cancel()
 		GetProcessHLSCommandStore().Remove(input.StreamId)
@@ -68,28 +69,30 @@ func (s *HLSService) ProcessStop(input *dtos.HLSPublishStopInput) error {
 		return err
 	}
 	if stream.EnableRecord {
-		s.putSegmentsToStorage(input.StreamId)
+		if err := s.putSegmentsToStorage(input.StreamId); err != nil {
+			return err
+		}
 	}
 	if thumbnail_url, err := s.putThumbnailToStorage(input.StreamId); err != nil {
-		s.logger.Error("Could not put thumbnail of streamid %s to storage due to an error: %v", input.StreamId, err)
+		logg.Error("Could not put thumbnail to storage due to an error: %v", err)
 	} else {
 		if err := s.stream_repository.UpdateOne(map[string]interface{}{"stream_id": input.StreamId}, map[string]interface{}{
 			"thumbnail_url": thumbnail_url,
 		}, stream); err != nil {
-			s.logger.Error("Could not update the thumbnail url of streamid %s due to an error: %v", input.StreamId, err)
+			s.logger.Error("Could not update the thumbnail url due to an error: %v", err)
 		}
 	}
 	if err := s.cleanStreamDir(input.StreamId); err != nil {
-		s.logger.Error("Could not clean the directory of streamid %s due to an error: %v", input.StreamId, err)
+		logg.Error("Could not clean the directory due to an error: %v", err)
 		return err
 	}
 	return nil
 }
 
-func (s *HLSService) putSegmentsToStorage(stream_id string) {
+func (s *HLSService) putSegmentsToStorage(stream_id string) error {
 	segments := GetListSegmentFilesByStreamId(stream_id)
 	if len(*segments) == 0 {
-		return
+		return fmt.Errorf("hls segments is empty")
 	}
 	seg_objs := utils.Map(segments, func(a string, b int) minio_service.MinIOFObject {
 		return &minio_service.HLSSegmentObject{
@@ -104,6 +107,7 @@ func (s *HLSService) putSegmentsToStorage(stream_id string) {
 			s.logger.Error("Could not fput object %s due to an  error: %v", v.ObjectName, v.Error)
 		}
 	}
+	return nil
 }
 
 func (s *HLSService) putThumbnailToStorage(stream_id string) (string, error) {
