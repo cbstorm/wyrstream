@@ -68,12 +68,19 @@ func (s *HLSService) ProcessStop(input *dtos.HLSPublishStopInput) error {
 		return err
 	}
 	if stream.EnableRecord {
-		s.logger.Info("start put segments done...")
 		s.putSegmentsToStorage(input.StreamId)
-		s.logger.Info("put segments done...")
 	}
-	s.putThumbnailToStorage(input.StreamId)
+	if thumbnail_url, err := s.putThumbnailToStorage(input.StreamId); err != nil {
+		s.logger.Error("Could not put thumbnail of streamid %s to storage due to an error: %v", input.StreamId, err)
+	} else {
+		if err := s.stream_repository.UpdateOne(map[string]interface{}{"stream_id": input.StreamId}, map[string]interface{}{
+			"thumbnail_url": thumbnail_url,
+		}, stream); err != nil {
+			s.logger.Error("Could not update the thumbnail url of streamid %s due to an error: %v", input.StreamId, err)
+		}
+	}
 	if err := s.cleanStreamDir(input.StreamId); err != nil {
+		s.logger.Error("Could not clean the directory of streamid %s due to an error: %v", input.StreamId, err)
 		return err
 	}
 	return nil
@@ -81,6 +88,9 @@ func (s *HLSService) ProcessStop(input *dtos.HLSPublishStopInput) error {
 
 func (s *HLSService) putSegmentsToStorage(stream_id string) {
 	segments := GetListSegmentFilesByStreamId(stream_id)
+	if len(*segments) == 0 {
+		return
+	}
 	seg_objs := utils.Map(segments, func(a string, b int) minio_service.MinIOFObject {
 		return &minio_service.HLSSegmentObject{
 			StreamId: stream_id,
@@ -97,9 +107,13 @@ func (s *HLSService) putSegmentsToStorage(stream_id string) {
 }
 
 func (s *HLSService) putThumbnailToStorage(stream_id string) (string, error) {
+	p := BuildThumbnailFilePath(stream_id)
 	obj := &minio_service.StreamThumbnailObject{
 		StreamId: stream_id,
-		Path:     BuildThumbnailFilePath(stream_id),
+		Path:     p,
+	}
+	if !obj.EnsurePath() {
+		return "", fmt.Errorf("thumbnail at %s doesn't exist", p)
 	}
 	return minio_service.GetMinioService().FPutObject(obj)
 }

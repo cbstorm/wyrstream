@@ -1,6 +1,9 @@
 package minio_service
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
 type HLSSegmentObject struct {
 	StreamId string
@@ -33,4 +36,11 @@ func (s *StreamThumbnailObject) FilePath() string {
 }
 func (s *StreamThumbnailObject) ContentType() string {
 	return "image/jpeg"
+}
+
+func (s *StreamThumbnailObject) EnsurePath() bool {
+	if _, err := os.Stat(s.Path); err != nil {
+		return false
+	}
+	return true
 }

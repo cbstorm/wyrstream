@@ -48,15 +48,20 @@ func (r *StreamRepository) FindOneByStreamIdAndSubscribeKey(stream_id, subscribe
 func (r *StreamRepository) UpdatePublishStartByStreamId(stream_id, stream_server_url, hls_url, thumbnail_url string, out *entities.StreamEntity, opts ...CURDOptionFunc) error {
 	return r.WithTransaction(func(ctx mongo.SessionContext) error {
 		// Update stream
-		if err := r.UpdateOne(map[string]interface{}{
-			"stream_id": stream_id,
-		}, map[string]interface{}{
-			"is_publishing":     true,
-			"published_at":      time.Now().UTC(),
-			"hls_url":           hls_url,
-			"thumbnail_url":     thumbnail_url,
-			"stream_server_url": stream_server_url,
-		}, out, WithContext(ctx)); err != nil {
+		if err := r.UpdateOne(
+			map[string]interface{}{
+				"stream_id": stream_id,
+			},
+			map[string]interface{}{
+				"is_publishing":     true,
+				"published_at":      time.Now().UTC(),
+				"hls_url":           hls_url,
+				"thumbnail_url":     thumbnail_url,
+				"stream_server_url": stream_server_url,
+			},
+			out,
+			WithContext(ctx),
+		); err != nil {
 			return err
 		}
 		// Insert stream log
