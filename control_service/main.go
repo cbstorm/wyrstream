@@ -5,6 +5,7 @@ import (
 	"github.com/cbstorm/wyrstream/lib/configs"
 	"github.com/cbstorm/wyrstream/lib/database"
 	"github.com/cbstorm/wyrstream/lib/logger"
+	"github.com/cbstorm/wyrstream/lib/minio_service"
 	"github.com/cbstorm/wyrstream/lib/nats_service"
 	"github.com/cbstorm/wyrstream/lib/redis_service"
 )
@@ -41,6 +42,18 @@ func main() {
 	if err := n.Connect(); err != nil {
 		logg.Fatal("Could not connect to NATS server with err: %v", err)
 	}
+	// MinIO
+	m := minio_service.GetMinioService()
+	if err := m.LoadConfig(configs.GetConfig()); err != nil {
+		logg.Fatal("Could not load the MinIO configuration due to an error: %v", err)
+	}
+	if err := m.Init(); err != nil {
+		logg.Fatal("Could not initialize the MinIO service due to an error: %v", err)
+	}
+	if err := m.AssertBucket(); err != nil {
+		logg.Fatal("Could not assert the MinIO bucket due to an error: %v", err)
+	}
+
 	// HTTP server
 	s := http_server.GetHttpServer()
 	if err := s.LoadConfig(configs.GetConfig()); err != nil {

@@ -4,7 +4,7 @@ dist
 .vscode
 **/*.exe
 **/__debug*
-tmp
+**/tmp
 **/go.sum
 hls_service/public/*
 **/package-lock.json

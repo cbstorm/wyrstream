@@ -163,7 +163,7 @@ func (m *MinIOService) PutObject(object MinIOObject, opts ...MinIOOptionFunc) (s
 	return fmt.Sprintf("%s/%s/%s", m.config.MINIO_PUBLIC_URL(), result.Bucket, result.Key), nil
 }
 
-func (m *MinIOService) PutObjects(objects *[]MinIOObject) (*[]*BulkPutObjectResult, error) {
+func (m *MinIOService) PutObjects(objects *[]MinIOObject) *[]*BulkPutObjectResult {
 	number_of_obj := len(*objects)
 	t := time.Duration(30 * number_of_obj)
 	ctx, cancel := context.WithTimeout(context.Background(), t*time.Second)
@@ -181,7 +181,7 @@ func (m *MinIOService) PutObjects(objects *[]MinIOObject) (*[]*BulkPutObjectResu
 		r := <-upload_ch
 		result[i] = r
 	}
-	return &result, nil
+	return &result
 }
 
 func (m *MinIOService) ListDir(dir string, opts ...MinIOOptionFunc) (*[]string, error) {
@@ -196,13 +196,38 @@ func (m *MinIOService) ListDir(dir string, opts ...MinIOOptionFunc) (*[]string, 
 		ctx = mio.ctx
 	}
 	objs := m.client.ListObjects(ctx, m.bucket_name, minio.ListObjectsOptions{
-		Prefix: dir,
+		Prefix:    dir,
+		Recursive: true,
 	})
 	result := make([]string, 0)
 	for o := range objs {
 		result = append(result, o.Key)
 	}
 	return &result, nil
+}
+
+func (m *MinIOService) ListDirs(dirs *[]string) *map[string]*BulkListDirResult {
+	num_of_dir := len(*dirs)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(30*num_of_dir)*time.Second)
+	defer cancel()
+	list_dir_ch := make(chan *BulkListDirResult, num_of_dir)
+	defer close(list_dir_ch)
+	for _, v := range *dirs {
+		go func(d string) {
+			r, err := m.ListDir(d, WithContext(ctx))
+			if err != nil {
+				list_dir_ch <- &BulkListDirResult{Dir: d, Error: err}
+				return
+			}
+			list_dir_ch <- &BulkListDirResult{Dir: d, Result: r}
+		}(v)
+	}
+	result := make(map[string]*BulkListDirResult)
+	for i := 0; i < num_of_dir; i++ {
+		r := <-list_dir_ch
+		result[r.Dir] = r
+	}
+	return &result
 }
 
 func (m *MinIOService) CancelHealthCheck() {

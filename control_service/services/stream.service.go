@@ -10,9 +10,11 @@ import (
 	"github.com/cbstorm/wyrstream/lib/dtos"
 	"github.com/cbstorm/wyrstream/lib/entities"
 	"github.com/cbstorm/wyrstream/lib/exceptions"
+	"github.com/cbstorm/wyrstream/lib/minio_service"
 	"github.com/cbstorm/wyrstream/lib/redis_service"
 	"github.com/cbstorm/wyrstream/lib/repositories"
 	"github.com/cbstorm/wyrstream/lib/utils"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 var stream_service *StreamService
@@ -28,14 +30,18 @@ func GetStreamService() *StreamService {
 }
 
 type StreamService struct {
-	redis_service     *redis_service.RedisService
 	stream_repository *repositories.StreamRepository
+	vod_repository    *repositories.VodRepository
+	redis_service     *redis_service.RedisService
+	minio_service     *minio_service.MinIOService
 }
 
 func NewStreamService() *StreamService {
 	return &StreamService{
 		stream_repository: repositories.GetStreamRepository(),
+		vod_repository:    repositories.GetVodRepository(),
 		redis_service:     redis_service.GetRedisService(),
+		minio_service:     minio_service.GetMinioService(),
 	}
 }
 
@@ -98,7 +104,42 @@ func (svc *StreamService) ConvertVODStream(input *dtos.ConvertVODStreamInput, re
 	if is_not_found {
 		return exceptions.Err_RESOURCE_NOT_FOUND().SetMessage("stream not found")
 	}
-	// TODO: pull segments -> generate playlist files -> upload playlist -> update stream status -> create vod
+	streams_helper := helpers.NewStreamsHelper(&[]*entities.StreamEntity{stream})
+	streams_helper.ListStorageDirs()
+	// upload new hls playlist file
+	hls_playlist_path, err := streams_helper.GenerateHLSPlaylist(stream)
+	if err != nil {
+		return err
+	}
+	obj := &minio_service.HLSPlaylistObject{
+		StreamId: stream.StreamId,
+		Path:     hls_playlist_path,
+	}
+	hls_playlist_url, err := svc.minio_service.FPutObject(obj)
+	if err != nil {
+		return err
+	}
+	// Init new VOD
+	vod := entities.NewVodEntity()
+	vod.Title = stream.Title
+	vod.Description = stream.Description
+	vod.HLSUrl = hls_playlist_url
+	vod.OwnerId = stream.PublisherId
+	vod.ThumbnailUrl = stream.ThumbnailUrl
+	// Update Stream to closed and insert new VOD
+	if err := svc.stream_repository.WithTransaction(func(ctx mongo.SessionContext) error {
+		if err := svc.stream_repository.UpdateOneById(stream.Id, map[string]interface{}{
+			"is_closed": true,
+		}, stream, repositories.WithContext(ctx)); err != nil {
+			return err
+		}
+		if err := svc.vod_repository.InsertOne(vod, repositories.WithContext(ctx)); err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		return err
+	}
 	return nil
 }
 

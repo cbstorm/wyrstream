@@ -18,3 +18,9 @@ type BulkPutObjectResult struct {
 	PutResult  string
 	Error      error
 }
+
+type BulkListDirResult struct {
+	Dir    string
+	Result *[]string
+	Error  error
+}

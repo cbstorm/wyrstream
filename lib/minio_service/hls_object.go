@@ -5,6 +5,21 @@ import (
 	"os"
 )
 
+type HLSPlaylistObject struct {
+	StreamId string
+	Path     string
+}
+
+func (h *HLSPlaylistObject) ObjectName() string {
+	return fmt.Sprintf("streams/%s/playlist/%s", h.StreamId, "playlist.m3u8")
+}
+func (h *HLSPlaylistObject) FilePath() string {
+	return h.Path
+}
+func (h *HLSPlaylistObject) ContentType() string {
+	return "application/x-mpegurl"
+}
+
 type HLSSegmentObject struct {
 	StreamId string
 	Name     string

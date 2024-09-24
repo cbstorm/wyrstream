@@ -1,14 +1,20 @@
 package helpers
 
 import (
+	"fmt"
+	"os"
+	"strings"
+
 	"github.com/cbstorm/wyrstream/lib/entities"
+	"github.com/cbstorm/wyrstream/lib/minio_service"
 	"github.com/cbstorm/wyrstream/lib/repositories"
 	"github.com/cbstorm/wyrstream/lib/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type StreamsHelper struct {
-	streams *[]*entities.StreamEntity
+	streams   *[]*entities.StreamEntity
+	list_dirs *map[string]*minio_service.BulkListDirResult
 }
 
 func NewStreamsHelper(streams *[]*entities.StreamEntity) *StreamsHelper {
@@ -39,4 +45,46 @@ func (h *StreamsHelper) ResolveStreamLogs() error {
 		v.StreamLogs = (*stream_logs_group_by_stream_id)[v.Id.Hex()]
 	}
 	return nil
+}
+
+func (h *StreamsHelper) ListStorageDirs() {
+	dir_prefixs := utils.Map(h.streams, func(a *entities.StreamEntity, b int) string {
+		return fmt.Sprintf("streams/%s/segments/", a.StreamId)
+	})
+	list_dirs := minio_service.GetMinioService().ListDirs(dir_prefixs)
+	h.list_dirs = list_dirs
+}
+
+func (h *StreamsHelper) getListDirByStream(stream *entities.StreamEntity) (*[]string, error) {
+	res := (*h.list_dirs)[fmt.Sprintf("streams/%s/segments/", stream.StreamId)]
+	return res.Result, res.Error
+}
+
+func (h *StreamsHelper) GenerateHLSPlaylist(stream *entities.StreamEntity) (string, error) {
+	segments, err := h.getListDirByStream(stream)
+	if err != nil {
+		return "", err
+	}
+	f_path := fmt.Sprintf("tmp/%s/playlist.m3u8", stream.StreamId)
+	if err := utils.AssertDir(f_path); err != nil {
+		return "", err
+	}
+	f, err := os.Create(f_path)
+	if err != nil {
+		return "", err
+	}
+	if _, err := f.WriteString(fmt.Sprintf("#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-TARGETDURATION:5\n#EXT-X-MEDIA-SEQUENCE:%d\n", len(*segments))); err != nil {
+		return "", err
+	}
+	t := "#EXTINF:5.000000,"
+	for _, v := range *segments {
+		s := strings.Replace(v, fmt.Sprintf("streams/%s", stream.StreamId), "..", 1)
+		if _, err := f.WriteString(fmt.Sprintf("%s\n%s\n", t, s)); err != nil {
+			return "", err
+		}
+	}
+	if _, err := f.WriteString("#EXT-X-ENDLIST"); err != nil {
+		return "", err
+	}
+	return f_path, nil
 }

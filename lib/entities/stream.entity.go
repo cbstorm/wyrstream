@@ -20,13 +20,15 @@ type StreamEntity struct {
 	StreamId        string             `bson:"stream_id" json:"stream_id"`
 	PublishKey      string             `bson:"publish_key" json:"-"`
 	SubscribeKey    string             `bson:"subscribe_key" json:"-"`
-	IsPublishing    bool               `bson:"is_publishing" json:"is_publishing"`
 	PublishedAt     time.Time          `bson:"published_at,omitempty" json:"published_at,omitempty"`
 	StoppedAt       time.Time          `bson:"stopped_at,omitempty" json:"stopped_at,omitempty"`
 	HLSUrl          string             `bson:"hls_url" json:"hls_url"`
 	ThumbnailUrl    string             `bson:"thumbnail_url" json:"thumbnail_url"`
 	HLSSegmentCount uint               `bson:"hls_segment_count" json:"hls_segment_count"`
 	GuidanceCommand string             `bson:"guidance_command" json:"guidance_command"`
+
+	IsPublishing bool `bson:"is_publishing" json:"is_publishing"`
+	IsClosed     bool `bson:"is_closed" json:"is_closed"`
 
 	PublishStreamUrl string              `bson:"-" json:"stream_url"`
 	StreamLogs       *[]*StreamLogEntity `bson:"-" json:"stream_logs"`
