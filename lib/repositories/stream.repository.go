@@ -84,6 +84,7 @@ func (r *StreamRepository) UpdatePublishStopByStreamId(stream_id string, hls_seg
 			map[string]interface{}{
 				"is_publishing": false,
 				"stopped_at":    time.Now().UTC(),
+				"updatedAt":     time.Now().UTC(),
 			},
 			out,
 			WithIncr(map[string]interface{}{"hls_segment_count": hls_segment_count}),
@@ -92,6 +93,21 @@ func (r *StreamRepository) UpdatePublishStopByStreamId(stream_id string, hls_seg
 		}
 		// Insert stream log
 		if err := GetStreamLogRepository().InsertOne(entities.NewStreamLogEntity().SetStreamId(out.Id).SetStopLog(), WithContext(ctx)); err != nil {
+			return err
+		}
+		return nil
+	}, opts...)
+}
+
+func (r *StreamRepository) UpdateStreamToClosed(stream *entities.StreamEntity, opts ...CURDOptionFunc) error {
+	return r.WithTransaction(func(ctx mongo.SessionContext) error {
+		if err := r.UpdateOneById(stream.Id, map[string]interface{}{
+			"is_closed": true,
+			"updatedAt": time.Now().UTC(),
+		}, stream, WithContext(ctx)); err != nil {
+			return err
+		}
+		if err := GetStreamLogRepository().InsertOne(entities.NewStreamLogEntity().SetStreamId(stream.Id).SetClosedLog(), WithContext(ctx)); err != nil {
 			return err
 		}
 		return nil

@@ -167,6 +167,19 @@ func (svc *StreamService) UpdateOneStream(input *dtos.UpdateOneStreamInput, reqC
 
 func (svc *StreamService) DeleteOneStream(input *dtos.DeleteOneInput, reqCtx *common.RequestContext) (*entities.StreamEntity, error) {
 	stream := entities.NewStreamEntity()
+	err, is_not_found := svc.stream_repository.FindOne(map[string]interface{}{
+		"_id":          input.Id,
+		"publisher_id": reqCtx.GetObjId(),
+	}, stream)
+	if err != nil {
+		return nil, err
+	}
+	if is_not_found {
+		return nil, exceptions.Err_RESOURCE_NOT_FOUND().SetMessage("stream not found")
+	}
+	if err := svc.stream_repository.UpdateStreamToClosed(stream); err != nil {
+		return nil, err
+	}
 	return stream, nil
 }
 

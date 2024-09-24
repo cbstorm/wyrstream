@@ -30,3 +30,8 @@ func (e *StreamLogEntity) SetStopLog() *StreamLogEntity {
 	e.Log = "STOP"
 	return e
 }
+
+func (e *StreamLogEntity) SetClosedLog() *StreamLogEntity {
+	e.Log = "Closed"
+	return e
+}

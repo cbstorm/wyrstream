@@ -19,6 +19,7 @@ var _ = GetHttpServer().FeedRoute(&HTTPRoute{
 			fetchArgs := dtos.NewFetchArgs()
 			fetchArgs.ParseQueries(c.Queries())
 			fetchArgs.SetFilter("is_publishing", true)
+			fetchArgs.SetFilter("is_closed", false)
 			res, err := services.GetStreamService().FetchStreams(fetchArgs, req_ctx)
 			if err != nil {
 				return common.ResponseError(c, err)
@@ -38,6 +39,7 @@ var _ = GetHttpServer().FeedRoute(&HTTPRoute{
 			fetchArgs := dtos.NewFetchArgs()
 			fetchArgs.ParseQueries(c.Queries())
 			fetchArgs.SetFilter("publisher_id", req_ctx.GetObjId())
+			fetchArgs.SetFilter("is_closed", false)
 			res, err := services.GetStreamService().FetchStreams(fetchArgs, req_ctx)
 			if err != nil {
 				return common.ResponseError(c, err)
@@ -96,6 +98,7 @@ var _ = GetHttpServer().FeedRoute(&HTTPRoute{
 	Endpoint: "/streams/vod/:id",
 	Handlers: []func(*fiber.Ctx) error{
 		middlewares.AuthMiddleware,
+		middlewares.Alert,
 		func(c *fiber.Ctx) error {
 			req_ctx := common.GetRequestContext(c)
 			input, err := dtos.NewConvertVODStreamInput().SetId(c.Params("id"))

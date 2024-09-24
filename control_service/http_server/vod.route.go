@@ -29,6 +29,25 @@ var _ = GetHttpServer().FeedRoute(&HTTPRoute{
 
 var _ = GetHttpServer().FeedRoute(&HTTPRoute{
 	Method:   GET,
+	Endpoint: "/vods/my_vods",
+	Handlers: []func(*fiber.Ctx) error{
+		middlewares.AuthRole(enums.AUTH_ROLE_USER),
+		func(c *fiber.Ctx) error {
+			req_ctx := common.GetRequestContext(c)
+			fetchArgs := dtos.NewFetchArgs()
+			fetchArgs.ParseQueries(c.Queries())
+			fetchArgs.SetFilter("owner_id", req_ctx.GetObjId())
+			res, err := services.GetVodService().FetchVods(fetchArgs, req_ctx)
+			if err != nil {
+				return common.ResponseError(c, err)
+			}
+			return common.ResponseOK(c, res)
+		},
+	},
+})
+
+var _ = GetHttpServer().FeedRoute(&HTTPRoute{
+	Method:   GET,
 	Endpoint: "/vods/:id",
 	Handlers: []func(*fiber.Ctx) error{
 		func(c *fiber.Ctx) error {
