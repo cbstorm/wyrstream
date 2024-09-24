@@ -70,18 +70,21 @@ func (s *HLSService) ProcessStop(input *dtos.HLSPublishStopInput) error {
 	}
 	if stream.EnableRecord {
 		if err := s.putSegmentsToStorage(input.StreamId); err != nil {
+			logg.Error("Could not put segments to storage due to an error: %v", err)
 			return err
 		}
 	}
-	if thumbnail_url, err := s.putThumbnailToStorage(input.StreamId); err != nil {
+	thumbnail_url, err := s.putThumbnailToStorage(input.StreamId)
+	if err != nil {
 		logg.Error("Could not put thumbnail to storage due to an error: %v", err)
-	} else {
-		if err := s.stream_repository.UpdateOne(map[string]interface{}{"stream_id": input.StreamId}, map[string]interface{}{
-			"thumbnail_url": thumbnail_url,
-		}, stream); err != nil {
-			s.logger.Error("Could not update the thumbnail url due to an error: %v", err)
-		}
 	}
+	if err := s.stream_repository.UpdateOne(map[string]interface{}{"stream_id": input.StreamId}, map[string]interface{}{
+		"thumbnail_url": thumbnail_url,
+		"ready_for_vod": true,
+	}, stream); err != nil {
+		s.logger.Error("Could not update the thumbnail url due to an error: %v", err)
+	}
+
 	if err := s.cleanStreamDir(input.StreamId); err != nil {
 		logg.Error("Could not clean the directory due to an error: %v", err)
 		return err

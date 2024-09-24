@@ -30,6 +30,7 @@ type StreamEntity struct {
 
 	PublishStreamUrl string              `bson:"-" json:"stream_url"`
 	StreamLogs       *[]*StreamLogEntity `bson:"-" json:"stream_logs"`
+	ShownPublishKey  string              `bson:"-" json:"shown_publish_key"`
 }
 
 func NewStreamEntity() *StreamEntity {
@@ -52,6 +53,16 @@ func (e *StreamEntity) GeneratePublishKey() *StreamEntity {
 
 func (e *StreamEntity) GenerateSubscribeKey() *StreamEntity {
 	e.SubscribeKey = utils.StringRand(30)
+	return e
+}
+
+func (e *StreamEntity) MakeShownPublishKey() *StreamEntity {
+	e.ShownPublishKey = e.PublishKey
+	return e
+}
+
+func (e *StreamEntity) MakePublishStreamUrl() *StreamEntity {
+	e.PublishStreamUrl = fmt.Sprintf("%s?streamid=publish:/live/%s?key=%s", e.StreamServerUrl, e.StreamId, e.PublishKey)
 	return e
 }
 

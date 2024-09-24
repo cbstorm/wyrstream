@@ -1,8 +1,10 @@
 package utils
 
 import (
+	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"math/big"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -12,25 +14,6 @@ import (
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
 )
-
-var ASCII = make([]byte, 0)
-
-func GetAsciiBytes() []byte {
-	if len(ASCII) == 0 {
-		bytes := make([]byte, 0)
-		for i := 48; i < 58; i++ {
-			bytes = append(bytes, byte(i))
-		}
-		for i := 65; i <= 90; i++ {
-			bytes = append(bytes, byte(i))
-		}
-		for i := 97; i <= 122; i++ {
-			bytes = append(bytes, byte(i))
-		}
-		ASCII = bytes
-	}
-	return ASCII
-}
 
 func DefaultString(val string, defaultVal string) string {
 	if val != "" {
@@ -112,19 +95,15 @@ func ContainPattern(source string, target string) bool {
 	return false
 }
 
-func StringRand(l int) string {
-	bytes := GetAsciiBytes()
-	result := make([]byte, l)
-	k := 0
-	for {
-		if k >= l {
-			break
-		}
-		r := RandomRange(0, len(bytes)-1)
-		result[k] = bytes[r]
-		k++
+func StringRand(n int) string {
+	const letters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-"
+	ret := make([]byte, n)
+	for i := 0; i < n; i++ {
+		num, _ := rand.Int(rand.Reader, big.NewInt(int64(len(letters))))
+		ret[i] = letters[num.Int64()]
 	}
-	return string(result)
+
+	return string(ret)
 }
 
 func Base64Encode(inp string) string {

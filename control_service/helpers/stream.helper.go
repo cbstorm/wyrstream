@@ -18,6 +18,9 @@ func NewStreamsHelper(streams *[]*entities.StreamEntity) *StreamsHelper {
 }
 
 func (h *StreamsHelper) ResolveStreamLogs() error {
+	if len(*h.streams) == 0 {
+		return nil
+	}
 	stream_obj_ids := utils.Map(h.streams, func(e *entities.StreamEntity, i int) primitive.ObjectID {
 		return e.Id
 	})

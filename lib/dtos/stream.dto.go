@@ -37,9 +37,17 @@ func (d *UpdateOneStreamInput) SetId(id string) (*UpdateOneStreamInput, error) {
 }
 
 type UpdateOneStreamData struct {
-	Name string `json:"name,omitempty"`
+	Title        string `json:"title,omitempty" validate:"required,min_length=6,max_length=50"`
+	Description  string `json:"description,omitempty" validate:"required,min_length=6,max_length=255"`
+	EnableRecord bool   `json:"enable_record"`
+}
+
+func (i *UpdateOneStreamData) Validate() error {
+	return utils.NewValidator(i).Validate()
 }
 
 func NewUpdateOneStreamInput() *UpdateOneStreamInput {
-	return &UpdateOneStreamInput{}
+	return &UpdateOneStreamInput{
+		Data: &UpdateOneStreamData{},
+	}
 }

@@ -121,11 +121,11 @@ func (m *MinIOService) FPutObject(object MinIOFObject, opts ...MinIOOptionFunc) 
 }
 
 func (m *MinIOService) FPutObjects(objects *[]MinIOFObject) *[]*BulkPutObjectResult {
-	no_obj := len(*objects)
-	t := time.Duration(30 * no_obj)
+	number_of_obj := len(*objects)
+	t := time.Duration(30 * number_of_obj)
 	ctx, cancel := context.WithTimeout(context.Background(), t*time.Second)
 	defer cancel()
-	upload_ch := make(chan *BulkPutObjectResult, no_obj)
+	upload_ch := make(chan *BulkPutObjectResult, number_of_obj)
 	defer close(upload_ch)
 	for _, e := range *objects {
 		go func(o MinIOFObject) {
@@ -134,7 +134,8 @@ func (m *MinIOService) FPutObjects(objects *[]MinIOFObject) *[]*BulkPutObjectRes
 		}(e)
 	}
 	result := make([]*BulkPutObjectResult, 0)
-	for r := range upload_ch {
+	for i := 0; i < number_of_obj; i++ {
+		r := <-upload_ch
 		result = append(result, r)
 	}
 	return &result
@@ -163,10 +164,11 @@ func (m *MinIOService) PutObject(object MinIOObject, opts ...MinIOOptionFunc) (s
 }
 
 func (m *MinIOService) PutObjects(objects *[]MinIOObject) (*[]*BulkPutObjectResult, error) {
-	t := time.Duration(30 * len(*objects))
+	number_of_obj := len(*objects)
+	t := time.Duration(30 * number_of_obj)
 	ctx, cancel := context.WithTimeout(context.Background(), t*time.Second)
 	defer cancel()
-	upload_ch := make(chan *BulkPutObjectResult, len(*objects))
+	upload_ch := make(chan *BulkPutObjectResult, number_of_obj)
 	defer close(upload_ch)
 	for _, e := range *objects {
 		go func(o MinIOObject) {
@@ -175,7 +177,8 @@ func (m *MinIOService) PutObjects(objects *[]MinIOObject) (*[]*BulkPutObjectResu
 		}(e)
 	}
 	result := make([]*BulkPutObjectResult, 0)
-	for r := range upload_ch {
+	for i := 0; i < number_of_obj; i++ {
+		r := <-upload_ch
 		result = append(result, r)
 	}
 	return &result, nil

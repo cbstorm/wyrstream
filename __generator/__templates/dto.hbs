@@ -34,5 +34,7 @@ type UpdateOne{{Case name}}Data struct {
 }
 
 func NewUpdateOne{{Case name}}Input() *UpdateOne{{Case name}}Input {
-	return &UpdateOne{{Case name}}Input{}
+	return &UpdateOne{{Case name}}Input{
+		Data: &UpdateOne{{Case name}}Data{},
+	}
 }

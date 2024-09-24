@@ -33,8 +33,9 @@ type StreamRepository struct {
 
 func (r *StreamRepository) FindOneByStreamIdAndPublishKey(stream_id, publish_key string, out *entities.StreamEntity, opts ...CURDOptionFunc) (error, bool) {
 	return r.FindOne(map[string]interface{}{
-		"stream_id":   stream_id,
-		"publish_key": publish_key,
+		"stream_id":     stream_id,
+		"is_publishing": false,
+		"publish_key":   publish_key,
 	}, out, opts...)
 }
 
@@ -42,6 +43,7 @@ func (r *StreamRepository) FindOneByStreamIdAndSubscribeKey(stream_id, subscribe
 	return r.FindOne(map[string]interface{}{
 		"stream_id":     stream_id,
 		"subscribe_key": subscribe_key,
+		"is_publishing": true,
 	}, out, opts...)
 }
 

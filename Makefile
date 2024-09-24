@@ -115,7 +115,7 @@ test-pub:
     -maxrate:v 2M \
     -bufsize:v 1M \
     -preset ultrafast \
-	-f mpegts "srt://127.0.0.1:6000?streamid=publish:/live/STR66F0BBE31?key=EEEEEEEEEEEEEEEEEEEEEEsqqqqqqq"
+	-f mpegts "srt://127.0.0.1:6000?streamid=publish:/live/STR66F24EE21?key=JYqXgwdxlUkD2yXqN6L2TGTygYzpkN"
 test-sub:
 	ffplay -v quiet -f mpegts -transtype live -i "srt://127.0.0.1:6000?streamid=/live/STR66E95B8E2?key=0MRWUlRLHSViEddcmOtKLMDYann1st"
 test-play-hls:

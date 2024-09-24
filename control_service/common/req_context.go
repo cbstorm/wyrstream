@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/cbstorm/wyrstream/lib/entities"
@@ -181,6 +182,14 @@ func (ctx *RequestContext) SetMethod(method string) *RequestContext {
 func (ctx *RequestContext) SetPath(path string) *RequestContext {
 	ctx.path = path
 	return ctx
+}
+
+func (ctx *RequestContext) GetPath() string {
+	return ctx.path
+}
+
+func (ctx *RequestContext) PathIncludes(s string) bool {
+	return strings.Contains(ctx.path, s)
 }
 
 func (ctx *RequestContext) SetHttpContext(http_ctx context.Context) *RequestContext {

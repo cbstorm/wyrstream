@@ -48,6 +48,11 @@ func (svc *StreamService) FetchStreams(fetchArgs *dtos.FetchArgs, reqCtx *common
 			return nil, err
 		}
 	}
+	if reqCtx.PathIncludes("my_streams") {
+		for _, v := range streams {
+			v.MakeShownPublishKey().MakePublishStreamUrl()
+		}
+	}
 	return res, err
 }
 
@@ -74,7 +79,7 @@ func (svc *StreamService) CreateOneStream(input *dtos.CreateOneStreamInput, reqC
 		return nil, err
 	}
 	stream.StreamServerUrl = stream_server_url
-	stream.GenerateStreamId().GeneratePublishKey().GenerateSubscribeKey().MakeGuidanceCommand()
+	stream.GenerateStreamId().GeneratePublishKey().GenerateSubscribeKey().MakeShownPublishKey().MakePublishStreamUrl().MakeGuidanceCommand()
 	if err := repositories.GetStreamRepository().InsertOne(stream); err != nil {
 		return nil, err
 	}
@@ -83,7 +88,23 @@ func (svc *StreamService) CreateOneStream(input *dtos.CreateOneStreamInput, reqC
 
 func (svc *StreamService) UpdateOneStream(input *dtos.UpdateOneStreamInput, reqCtx *common.RequestContext) (*entities.StreamEntity, error) {
 	stream := entities.NewStreamEntity()
-	stream.SetTime()
+	err, is_not_found := svc.stream_repository.FindOne(map[string]interface{}{
+		"_id":          input.Id,
+		"publisher_id": reqCtx.GetObjId(),
+	}, stream)
+	if err != nil {
+		return nil, err
+	}
+	if is_not_found {
+		return nil, exceptions.Err_BAD_REQUEST().SetMessage("stream not found")
+	}
+	stream.Title = input.Data.Title
+	stream.Description = input.Data.Description
+	stream.EnableRecord = input.Data.EnableRecord
+	stream.SetUpdatedAt()
+	if err := svc.stream_repository.UpdateOneById(stream.Id, stream, stream); err != nil {
+		return nil, err
+	}
 	return stream, nil
 }
 

@@ -372,10 +372,12 @@ func (s *Server) onPublishStop(stream_id string) {
 	input := &dtos.HLSPublishStopInput{
 		StreamId: stream_id,
 	}
-	_, err := s.nats_service.Request(nats_service.HLS_PUBLISH_STOP.Concat(input.StreamId), input)
-	if err != nil {
-		log.Printf("Could not emit publish stop event of stream %s with err: %v", stream_id, err)
-	}
+	go func() {
+		_, err := s.nats_service.Request(nats_service.HLS_PUBLISH_STOP.Concat(input.StreamId), input)
+		if err != nil {
+			log.Printf("Could not emit publish stop event of stream %s with err: %v", stream_id, err)
+		}
+	}()
 }
 
 func (s *Server) onSubscribe(stream_id, subscribe_key string) error {

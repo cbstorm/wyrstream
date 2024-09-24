@@ -93,7 +93,7 @@ var _ = GetHttpServer().FeedRoute(&HTTPRoute{
 
 var _ = GetHttpServer().FeedRoute(&HTTPRoute{
 	Method:   PUT,
-	Endpoint: "/streams",
+	Endpoint: "/streams/:id",
 	Handlers: []func(*fiber.Ctx) error{
 		middlewares.AuthRole(enums.AUTH_ROLE_USER),
 		middlewares.BodyRequiredMiddleware,
@@ -104,6 +104,10 @@ var _ = GetHttpServer().FeedRoute(&HTTPRoute{
 				return common.ResponseError(c, err)
 			}
 			if err := c.BodyParser(input.Data); err != nil {
+				e := exceptions.Err_BAD_REQUEST().SetMessage(err.Error())
+				return common.ResponseError(c, e)
+			}
+			if err := input.Data.Validate(); err != nil {
 				e := exceptions.Err_BAD_REQUEST().SetMessage(err.Error())
 				return common.ResponseError(c, e)
 			}
