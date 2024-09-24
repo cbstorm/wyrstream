@@ -70,6 +70,10 @@ func (h *StreamsHelper) GenerateHLSPlaylist(stream *entities.StreamEntity) (stri
 		return "", err
 	}
 	f, err := os.Create(f_path)
+	defer func() {
+		f.Sync()
+		f.Close()
+	}()
 	if err != nil {
 		return "", err
 	}
