@@ -1,4 +1,4 @@
-package services
+package alert_service
 
 import (
 	"sync"
@@ -29,8 +29,8 @@ func NewAlertService() *AlertService {
 	}
 }
 
-func (svc *AlertService) SendAlert(payload *dtos.AlertPayload) error {
-	if _, err := nats_service.GetNATSService().Request(nats_service.ALERT, payload); err != nil {
+func (svc *AlertService) AlertFromMiddleware(payload *dtos.AlertPayload) error {
+	if _, err := svc.nats_service.Request(nats_service.ALERT, payload); err != nil {
 		return err
 	}
 	return nil

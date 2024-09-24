@@ -92,10 +92,29 @@ var _ = GetHttpServer().FeedRoute(&HTTPRoute{
 })
 
 var _ = GetHttpServer().FeedRoute(&HTTPRoute{
+	Method:   POST,
+	Endpoint: "/streams/vod/:id",
+	Handlers: []func(*fiber.Ctx) error{
+		middlewares.AuthMiddleware,
+		func(c *fiber.Ctx) error {
+			req_ctx := common.GetRequestContext(c)
+			input, err := dtos.NewConvertVODStreamInput().SetId(c.Params("id"))
+			if err != nil {
+				return common.ResponseError(c, exceptions.Err_BAD_REQUEST().SetMessage(err.Error()))
+			}
+			if err := services.GetStreamService().ConvertVODStream(input, req_ctx); err != nil {
+				return common.ResponseError(c, err)
+			}
+			return common.ResponseOK(c, "OK")
+		},
+	},
+})
+
+var _ = GetHttpServer().FeedRoute(&HTTPRoute{
 	Method:   PUT,
 	Endpoint: "/streams/:id",
 	Handlers: []func(*fiber.Ctx) error{
-		middlewares.AuthRole(enums.AUTH_ROLE_USER),
+		middlewares.AuthMiddleware,
 		middlewares.BodyRequiredMiddleware,
 		func(c *fiber.Ctx) error {
 			req_ctx := common.GetRequestContext(c)
@@ -104,12 +123,10 @@ var _ = GetHttpServer().FeedRoute(&HTTPRoute{
 				return common.ResponseError(c, err)
 			}
 			if err := c.BodyParser(input.Data); err != nil {
-				e := exceptions.Err_BAD_REQUEST().SetMessage(err.Error())
-				return common.ResponseError(c, e)
+				return common.ResponseError(c, exceptions.Err_BAD_REQUEST().SetMessage(err.Error()))
 			}
 			if err := input.Data.Validate(); err != nil {
-				e := exceptions.Err_BAD_REQUEST().SetMessage(err.Error())
-				return common.ResponseError(c, e)
+				return common.ResponseError(c, exceptions.Err_BAD_REQUEST().SetMessage(err.Error()))
 			}
 			res, err := services.GetStreamService().UpdateOneStream(input, req_ctx)
 			if err != nil {

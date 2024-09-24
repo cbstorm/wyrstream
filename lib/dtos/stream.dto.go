@@ -51,3 +51,20 @@ func NewUpdateOneStreamInput() *UpdateOneStreamInput {
 		Data: &UpdateOneStreamData{},
 	}
 }
+
+type ConvertVODStreamInput struct {
+	Id primitive.ObjectID
+}
+
+func NewConvertVODStreamInput() *ConvertVODStreamInput {
+	return &ConvertVODStreamInput{}
+}
+
+func (d *ConvertVODStreamInput) SetId(id string) (*ConvertVODStreamInput, error) {
+	objId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, exceptions.Err_BAD_REQUEST().SetMessage(fmt.Sprintf("id invalid with %s", id))
+	}
+	d.Id = objId
+	return d, nil
+}

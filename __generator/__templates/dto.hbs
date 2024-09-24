@@ -4,11 +4,16 @@ import (
 	"fmt"
 
 	"github.com/cbstorm/wyrstream/lib/exceptions"
+	"github.com/cbstorm/wyrstream/lib/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type CreateOne{{Case name}}Input struct {
 	Name string `json:"name,omitempty"`
+}
+
+func (i *CreateOne{{Case name}}Input) Validate() error {
+	return utils.NewValidator(i).Validate()
 }
 
 func NewCreateOne{{Case name}}Input() *CreateOne{{Case name}}Input {
@@ -31,6 +36,10 @@ func (d *UpdateOne{{Case name}}Input) SetId(id string) (*UpdateOne{{Case name}}I
 
 type UpdateOne{{Case name}}Data struct {
 	Name string `json:"name,omitempty"`
+}
+
+func (i *UpdateOne{{Case name}}Data) Validate() error {
+	return utils.NewValidator(i).Validate()
 }
 
 func NewUpdateOne{{Case name}}Input() *UpdateOne{{Case name}}Input {

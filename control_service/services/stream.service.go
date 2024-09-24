@@ -86,6 +86,22 @@ func (svc *StreamService) CreateOneStream(input *dtos.CreateOneStreamInput, reqC
 	return stream, nil
 }
 
+func (svc *StreamService) ConvertVODStream(input *dtos.ConvertVODStreamInput, reqCtx *common.RequestContext) error {
+	stream := entities.NewStreamEntity()
+	err, is_not_found := svc.stream_repository.FindOne(map[string]interface{}{
+		"_id":          input.Id,
+		"publisher_id": reqCtx.GetObjId(),
+	}, stream)
+	if err != nil {
+		return err
+	}
+	if is_not_found {
+		return exceptions.Err_RESOURCE_NOT_FOUND().SetMessage("stream not found")
+	}
+	// TODO: pull segments -> generate playlist files -> upload playlist -> update stream status -> create vod
+	return nil
+}
+
 func (svc *StreamService) UpdateOneStream(input *dtos.UpdateOneStreamInput, reqCtx *common.RequestContext) (*entities.StreamEntity, error) {
 	stream := entities.NewStreamEntity()
 	err, is_not_found := svc.stream_repository.FindOne(map[string]interface{}{
@@ -96,7 +112,7 @@ func (svc *StreamService) UpdateOneStream(input *dtos.UpdateOneStreamInput, reqC
 		return nil, err
 	}
 	if is_not_found {
-		return nil, exceptions.Err_BAD_REQUEST().SetMessage("stream not found")
+		return nil, exceptions.Err_RESOURCE_NOT_FOUND().SetMessage("stream not found")
 	}
 	stream.Title = input.Data.Title
 	stream.Description = input.Data.Description

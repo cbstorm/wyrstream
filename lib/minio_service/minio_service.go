@@ -133,10 +133,10 @@ func (m *MinIOService) FPutObjects(objects *[]MinIOFObject) *[]*BulkPutObjectRes
 			upload_ch <- &BulkPutObjectResult{ObjectName: o.ObjectName(), PutResult: a, Error: err}
 		}(e)
 	}
-	result := make([]*BulkPutObjectResult, 0)
+	result := make([]*BulkPutObjectResult, number_of_obj)
 	for i := 0; i < number_of_obj; i++ {
 		r := <-upload_ch
-		result = append(result, r)
+		result[i] = r
 	}
 	return &result
 }
@@ -176,10 +176,10 @@ func (m *MinIOService) PutObjects(objects *[]MinIOObject) (*[]*BulkPutObjectResu
 			upload_ch <- &BulkPutObjectResult{ObjectName: o.ObjectName(), PutResult: a, Error: err}
 		}(e)
 	}
-	result := make([]*BulkPutObjectResult, 0)
+	result := make([]*BulkPutObjectResult, number_of_obj)
 	for i := 0; i < number_of_obj; i++ {
 		r := <-upload_ch
-		result = append(result, r)
+		result[i] = r
 	}
 	return &result, nil
 }
