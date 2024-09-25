@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/cbstorm/wyrstream/lib/entities"
+	"github.com/cbstorm/wyrstream/lib/logger"
 	"github.com/cbstorm/wyrstream/lib/minio_service"
 	"github.com/cbstorm/wyrstream/lib/repositories"
 	"github.com/cbstorm/wyrstream/lib/utils"
@@ -71,8 +72,12 @@ func (h *StreamsHelper) GenerateHLSPlaylist(stream *entities.StreamEntity) (stri
 	}
 	f, err := os.Create(f_path)
 	defer func() {
-		f.Sync()
-		f.Close()
+		if err := f.Sync(); err != nil {
+			logger.UnexpectedErrLogger.Error("Could not sync file %s due to an error: %v", f_path, err)
+		}
+		if err := f.Close(); err != nil {
+			logger.UnexpectedErrLogger.Error("Could not close file %s due to an error: %v", f_path, err)
+		}
 	}()
 	if err != nil {
 		return "", err

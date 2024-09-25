@@ -9,6 +9,7 @@ type VodEntity struct {
 	Description  string             `bson:"description" json:"description"`
 	HLSUrl       string             `bson:"hls_url" json:"hls_url"`
 	ThumbnailUrl string             `bson:"thumbnail_url" json:"thumbnail_url"`
+	FromStreamId primitive.ObjectID `bson:"from_stream_id" json:"from_stream_id"`
 }
 
 func NewVodEntity() *VodEntity {

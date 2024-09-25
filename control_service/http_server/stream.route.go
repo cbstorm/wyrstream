@@ -146,7 +146,8 @@ var _ = GetHttpServer().FeedRoute(&HTTPRoute{
 	Endpoint: "/streams/:id",
 	Handlers: []func(*fiber.Ctx) error{
 		middlewares.AuthMiddleware,
-		middlewares.AuthRole(enums.AUTH_ROLE_ADMIN),
+		middlewares.AuthRole(enums.AUTH_ROLE_USER),
+		middlewares.Alert,
 		func(c *fiber.Ctx) error {
 			req_ctx := common.GetRequestContext(c)
 			input, err := dtos.NewDeleteOneInput().SetId(c.Params("id"))

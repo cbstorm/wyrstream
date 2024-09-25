@@ -5,6 +5,8 @@ import (
 	"log"
 )
 
+var UnexpectedErrLogger = NewLogger("UNEXPECTED")
+
 type Logger struct {
 	Namespace string
 }

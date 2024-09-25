@@ -126,11 +126,10 @@ func (svc *StreamService) ConvertVODStream(input *dtos.ConvertVODStreamInput, re
 	vod.HLSUrl = hls_playlist_url
 	vod.OwnerId = stream.PublisherId
 	vod.ThumbnailUrl = stream.ThumbnailUrl
+	vod.FromStreamId = stream.Id
 	// Update Stream to closed and insert new VOD
 	if err := svc.stream_repository.WithTransaction(func(ctx mongo.SessionContext) error {
-		if err := svc.stream_repository.UpdateOneById(stream.Id, map[string]interface{}{
-			"is_closed": true,
-		}, stream, repositories.WithContext(ctx)); err != nil {
+		if err := svc.stream_repository.UpdateStreamToClosed(stream, repositories.WithContext(ctx)); err != nil {
 			return err
 		}
 		if err := svc.vod_repository.InsertOne(vod, repositories.WithContext(ctx)); err != nil {
