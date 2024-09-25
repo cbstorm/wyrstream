@@ -30,6 +30,7 @@ x-common-variables: &common-variables
   MINIO_DEFAULT_BUCKETS: wyrstream
   MINIO_BUCKET_NAME: wyrstream
   MINIO_PUBLIC_URL: http://127.0.0.1:9000
+  DISCORD_BOT_TOKEN: DISCORD_BOT_TOKEN
 services:
   control_service:
     image: cbstorm/wyrstream_control_service:latest
@@ -95,6 +96,14 @@ services:
       HLS_PUBLIC_URL: "http://127.0.0.1:10001"
     ports:
       - 10001:10000
+    restart: unless-stopped
+    networks:
+      - wyrstream
+  alert_service:
+    image: cbstorm/wyrstream_alert_service:latest
+    container_name: alert_service
+    environment:
+      <<: *common-variables
     restart: unless-stopped
     networks:
       - wyrstream

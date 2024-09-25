@@ -154,6 +154,9 @@ docker-build-hls-svc:
 docker-build-control-svc:
 	docker rmi -f $(BASE_DOCKER_REGISTRY)control_service:latest || true
 	docker build --progress=plain --no-cache -t $(BASE_DOCKER_REGISTRY)control_service:latest -f control_service.Dockerfile .
+docker-build-alert-svc:
+	docker rmi -f $(BASE_DOCKER_REGISTRY)alert_service:latest || true
+	docker build --progress=plain --no-cache -t $(BASE_DOCKER_REGISTRY)alert_service:latest -f alert_service.Dockerfile .
 docker-ffmpeg-srt:
 	docker rmi -f cbstorm/ffmpeg-srt:latest || true
 	docker build --progress=plain --no-cache -t cbstorm/ffmpeg-srt:latest -f ffmpeg-srt.Dockerfile .
