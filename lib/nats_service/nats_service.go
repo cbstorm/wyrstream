@@ -74,10 +74,10 @@ func (ns *NATS_Service) Connect() error {
 func (ns *NATS_Service) verifyConnection() error {
 	version := ns.nats_client.ConnectedServerVersion()
 	if version == "" {
-		ns.logger.Fatal("%s", "Connected to NATs server failed")
+		ns.logger.Fatal("%s", "Connected to NATS server failed")
 	}
 	ns.logger.Info("NATS_Service max_payload: %d", ns.nats_client.MaxPayload())
-	ns.logger.Info("Connected to NATs server with version: %s", version)
+	ns.logger.Info("Connected to NATS server with version: %s", version)
 	return nil
 }
 

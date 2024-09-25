@@ -11,3 +11,4 @@ hls_service/public/*
 **/node_modules
 alert_service/.out
 alert_service/yarn.lock
+bin

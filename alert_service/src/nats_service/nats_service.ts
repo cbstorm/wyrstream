@@ -19,9 +19,9 @@ class NATSService {
         pass: this._config.NATS_CORE_PASSWORD,
         reconnectTimeWait: 5000,
       });
-      console.log('Connect to NATs server successfully');
+      console.log('Connect to NATS server successfully');
     } catch (error) {
-      console.log(error, 'Could not connect to NATs server');
+      console.log(error, 'Could not connect to NATS server');
       throw error;
     }
   }

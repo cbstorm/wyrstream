@@ -146,6 +146,7 @@ func (s *Server) handleConnect(req srt.ConnRequest) srt.ConnType {
 	client := req.RemoteAddr()
 	streamId := req.StreamId()
 	path := streamId
+	log.Printf("REMOTE_ADDR: [%s], STREAMID: [%s] CONNECT", client, streamId)
 
 	if strings.HasPrefix(streamId, "publish:") {
 		mode = srt.PUBLISH

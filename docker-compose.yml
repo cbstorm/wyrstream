@@ -1,0 +1,218 @@
+x-common-variables: &common-variables
+  APP_NAME: wyrstream
+  JWT_SECRET_KEY: jwt_secret_key
+  MONGODB_DATABASE: wyrstream
+  MONGODB_USERNAME: mongodb_user
+  MONGODB_PASSWORD: mongodb_password
+  MONGODB_REPLICA_SET_NAME: rs0
+  MONGODB_REPLICA_SET_KEY: replicaSet0
+  MONGODB_URL: "mongodb://mongodb_user:mongodb_password@mongodb:27017,mongodb-secondary-0:27017,mongodb-secondary-1:27017/?replicaSet=rs0&serverSelectionTimeoutMS=2000&tlsAllowInvalidHostnames=true&authSource=wyrstream"
+  MONGODB_DB_NAME: wyrstream
+  NATS_ENABLE_AUTH: yes
+  NATS_USERNAME: nats_core_username
+  NATS_PASSWORD: nats_core_password
+  NATS_CORE_USERNAME: nats_core_username
+  NATS_CORE_PASSWORD: nats_core_password
+  NATS_CORE_HOST: nats_core
+  NATS_CORE_PORT: 4222
+  NATS_CORE_QUEUE_GROUP: worker-0
+  REDIS_USERNAME: default
+  REDIS_PASSWORD: redis_password
+  REDIS_HOST: redis
+  REDIS_PORT: 6379
+  REDIS_KEY_PREFIX: wyrstream
+  MINIO_HOST: minio
+  MINIO_PORT: 9000
+  MINIO_ROOT_USER: minio_root_user
+  MINIO_ROOT_PASSWORD: minio_root_password
+  MINIO_ACCESS_KEY: "H5T0CfgQHPsL1MtWoRGf"
+  MINIO_SECRET_KEY: "NiiFGR5G2ZwbpK9r4pbrNzPE6wHw23bmp5z5pxiD"
+  MINIO_DEFAULT_BUCKETS: wyrstream
+  MINIO_BUCKET_NAME: wyrstream
+  MINIO_PUBLIC_URL: http://127.0.0.1:9000
+services:
+  control_service:
+    image: cbstorm/wyrstream_control_service:latest
+    container_name: control_service
+    environment:
+      <<: *common-variables
+      HTTP_PORT: 9999
+    ports:
+      - 9999:9999
+    restart: unless-stopped
+    networks:
+      - wyrstream
+  stream_service:
+    image: cbstorm/wyrstream_stream_service:latest
+    container_name: stream_service
+    environment:
+      <<: *common-variables
+      STREAM_SERVER_ADDR: :6000
+      STREAM_SERVER_PUBLIC_URL: srt://stream_service:6000
+    ports:
+      - 6000:6000/udp
+    restart: unless-stopped
+    networks:
+      - wyrstream
+  stream_service_1:
+    image: cbstorm/wyrstream_stream_service:latest
+    container_name: stream_service_1
+    environment:
+      <<: *common-variables
+      STREAM_SERVER_ADDR: :6000
+      STREAM_SERVER_PUBLIC_URL: srt://stream_service_1:6000
+    ports:
+      - 6001:6000/udp
+    restart: unless-stopped
+    networks:
+      - wyrstream
+  auth_service:
+    image: cbstorm/wyrstream_auth_service:latest
+    container_name: auth_service
+    environment:
+      <<: *common-variables
+    restart: unless-stopped
+    networks:
+      - wyrstream
+  hls_service:
+    image: cbstorm/wyrstream_hls_service:latest
+    container_name: hls_service
+    environment:
+      <<: *common-variables
+      HLS_HTTP_PORT: 10000
+      HLS_PUBLIC_URL: "http://127.0.0.1:10000"
+    ports:
+      - 10000:10000
+    restart: unless-stopped
+    networks:
+      - wyrstream
+  hls_service_1:
+    image: cbstorm/wyrstream_hls_service:latest
+    container_name: hls_service_1
+    environment:
+      <<: *common-variables
+      HLS_HTTP_PORT: 10000
+      HLS_PUBLIC_URL: "http://127.0.0.1:10001"
+    ports:
+      - 10001:10000
+    restart: unless-stopped
+    networks:
+      - wyrstream
+  nats_core:
+    container_name: nats_core
+    image: "bitnami/nats:latest"
+    ports:
+      - 4222:4222
+    environment:
+      <<: *common-variables
+    volumes:
+      - ./.opt/nats_core/logs:/etc/logs
+      - ./.opt/nats_core/data:/bitnami/nats/data
+    restart: unless-stopped
+    networks:
+      - wyrstream
+  redis:
+    container_name: redis
+    image: bitnami/redis:latest
+    volumes:
+      - ./.opt/redis_data:/bitnami/redis/data
+    environment:
+      <<: *common-variables
+    ports:
+      - 6379:6379
+    restart: unless-stopped
+    networks:
+      - wyrstream
+  minio:
+    image: bitnami/minio:latest
+    container_name: minio
+    ports:
+      - 9000:9000
+      - 9001:9001
+    volumes:
+      - ./.opt/minio_data:/bitnami/minio/data
+    environment:
+      <<: *common-variables
+    restart: unless-stopped
+    networks:
+      - wyrstream
+  mongodb:
+    image: bitnami/mongodb:latest
+    container_name: mongodb
+    volumes:
+      - ./.opt/mongodb_data:/bitnami/mongodb
+    ports:
+      - 27017:27017
+    environment:
+      - MONGODB_ADVERTISED_HOSTNAME=mongodb
+      - MONGODB_REPLICA_SET_MODE=primary
+      - MONGODB_ROOT_USER=mongodb_root_user
+      - MONGODB_ROOT_PASSWORD=mongodb_root_password
+      - MONGODB_USERNAME=mongodb_user
+      - MONGODB_PASSWORD=mongodb_password
+      - MONGODB_DATABASE=wyrstream
+      - MONGODB_REPLICA_SET_NAME=rs0
+      - MONGODB_REPLICA_SET_KEY=replicaSet0
+    restart: unless-stopped
+    networks:
+      - wyrstream
+  mongodb-secondary-0:
+    image: bitnami/mongodb:latest
+    container_name: mongodb-secondary-0
+    depends_on:
+      - mongodb
+    environment:
+      - MONGODB_ADVERTISED_HOSTNAME=mongodb-secondary-0
+      - MONGODB_REPLICA_SET_MODE=secondary
+      - MONGODB_INITIAL_PRIMARY_HOST=mongodb
+      - MONGODB_INITIAL_PRIMARY_PORT_NUMBER=27017
+      - MONGODB_INITIAL_PRIMARY_ROOT_USER=mongodb_root_user
+      - MONGODB_INITIAL_PRIMARY_ROOT_PASSWORD=mongodb_root_password
+      - MONGODB_DATABASE=wyrstream
+      - MONGODB_REPLICA_SET_NAME=rs0
+      - MONGODB_REPLICA_SET_KEY=replicaSet0
+    ports:
+      - 27018:27017
+    restart: unless-stopped
+    networks:
+      - wyrstream
+  mongodb-secondary-1:
+    image: bitnami/mongodb:latest
+    container_name: mongodb-secondary-1
+    depends_on:
+      - mongodb
+    environment:
+      - MONGODB_ADVERTISED_HOSTNAME=mongodb-secondary-1
+      - MONGODB_REPLICA_SET_MODE=secondary
+      - MONGODB_INITIAL_PRIMARY_HOST=mongodb
+      - MONGODB_INITIAL_PRIMARY_PORT_NUMBER=27017
+      - MONGODB_INITIAL_PRIMARY_ROOT_USER=mongodb_root_user
+      - MONGODB_INITIAL_PRIMARY_ROOT_PASSWORD=mongodb_root_password
+      - MONGODB_DATABASE=wyrstream
+      - MONGODB_REPLICA_SET_NAME=rs0
+      - MONGODB_REPLICA_SET_KEY=replicaSet0
+    ports:
+      - 27019:27017
+    restart: unless-stopped
+    networks:
+      - wyrstream
+  mongodb-arbiter:
+    image: bitnami/mongodb:latest
+    container_name: mongodb-arbiter
+    depends_on:
+      - mongodb
+    environment:
+      - MONGODB_ADVERTISED_HOSTNAME=mongodb-arbiter
+      - MONGODB_REPLICA_SET_MODE=arbiter
+      - MONGODB_INITIAL_PRIMARY_HOST=mongodb
+      - MONGODB_INITIAL_PRIMARY_PORT_NUMBER=27017
+      - MONGODB_INITIAL_PRIMARY_ROOT_USER=mongodb_root_user
+      - MONGODB_INITIAL_PRIMARY_ROOT_PASSWORD=mongodb_root_password
+      - MONGODB_REPLICA_SET_NAME=rs0
+      - MONGODB_REPLICA_SET_KEY=replicaSet0
+    restart: unless-stopped
+    networks:
+      - wyrstream
+networks:
+  wyrstream:
+    driver: bridge

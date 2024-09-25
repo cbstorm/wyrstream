@@ -8,11 +8,12 @@ AUTH_SERVICE_DIR = ./auth_service
 HLS_SERVICE_DIR = ./hls_service
 ALERT_SERVICE_DIR = ./alert_service
 LIB_DIR = ./lib
-OUT = ./dist
+OUT = ./bin
 CONTROL_SVC = $(OUT)/control_svc
 STREAM_SVC = $(OUT)/stream_svc
 AUTH_SVC = $(OUT)/auth_svc
 HLS_SVC = $(OUT)/hls_svc
+BASE_DOCKER_REGISTRY=cbstorm/wyrstream_
 
 all: control-svc stream-svc auth-svc
 
@@ -139,3 +140,25 @@ test-hls:
 	hls_service/public/STR66E95B8E2/playlist.m3u8
 test-thumbnail:
 	ffmpeg -v error -i hls_service/public/STR66EC7A661/seg-00004.ts -q:v 1 -frames:v 1 -y tmp/STR66EC7A942.jpg
+
+docker-build: docker-build-stream-svc docker-build-auth-svc docker-build-hls-svc docker-build-control-svc
+docker-build-stream-svc:
+	docker rmi -f $(BASE_DOCKER_REGISTRY)stream_service:latest || true
+	docker build --progress=plain --no-cache -t $(BASE_DOCKER_REGISTRY)stream_service:latest -f stream_service.Dockerfile .
+docker-build-auth-svc:
+	docker rmi -f $(BASE_DOCKER_REGISTRY)auth_service:latest || true
+	docker build --progress=plain --no-cache -t $(BASE_DOCKER_REGISTRY)auth_service:latest -f auth_service.Dockerfile .
+docker-build-hls-svc:
+	docker rmi -f $(BASE_DOCKER_REGISTRY)hls_service:latest || true
+	docker build --progress=plain --no-cache -t $(BASE_DOCKER_REGISTRY)hls_service:latest -f hls_service.Dockerfile .
+docker-build-control-svc:
+	docker rmi -f $(BASE_DOCKER_REGISTRY)control_service:latest || true
+	docker build --progress=plain --no-cache -t $(BASE_DOCKER_REGISTRY)control_service:latest -f control_service.Dockerfile .
+docker-ffmpeg-srt:
+	docker rmi -f cbstorm/ffmpeg-srt:latest || true
+	docker build --progress=plain --no-cache -t cbstorm/ffmpeg-srt:latest -f ffmpeg-srt.Dockerfile .
+	docker push cbstorm/ffmpeg-srt:latest
+docker-up:
+	docker compose up -d
+docker-down:
+	docker compose down

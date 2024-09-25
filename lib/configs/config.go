@@ -84,9 +84,6 @@ func (c *Config) Load() error {
 // HTTP server control_service
 func (c *Config) LoadHttpConfig() error {
 	c.http_host = os.Getenv("HTTP_HOST")
-	if c.http_host == "" {
-		return errors.New("required HTTP_HOST")
-	}
 	port, err := strconv.ParseUint(os.Getenv("HTTP_PORT"), 10, 16)
 	if err != nil {
 		return err
@@ -221,9 +218,6 @@ func (c *Config) SERVER_PUBLIC_URL() string {
 // HLS config
 func (c *Config) LoadHLSHttpServerConfig() error {
 	c.hls_http_host = os.Getenv("HLS_HTTP_HOST")
-	if c.hls_http_host == "" {
-		return errors.New("required HLS_HTTP_HOST")
-	}
 	port, err := strconv.ParseUint(os.Getenv("HLS_HTTP_PORT"), 10, 16)
 	if err != nil {
 		return err

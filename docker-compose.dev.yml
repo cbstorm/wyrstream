@@ -13,7 +13,7 @@ services:
       - ./.opt/nats_core/data:/bitnami/nats/data
     restart: unless-stopped
     networks:
-      - wyrstream
+      - wyrstream-dev
   redis:
     container_name: redis
     image: bitnami/redis:latest
@@ -25,7 +25,7 @@ services:
       - 6379:6379
     restart: unless-stopped
     networks:
-      - wyrstream
+      - wyrstream-dev
   minio:
     image: bitnami/minio:latest
     container_name: minio
@@ -40,7 +40,7 @@ services:
       - MINIO_DEFAULT_BUCKETS=wyrstream
     restart: unless-stopped
     networks:
-      - wyrstream
+      - wyrstream-dev
 networks:
-  wyrstream:
+  wyrstream-dev:
     driver: bridge
