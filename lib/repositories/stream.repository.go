@@ -102,8 +102,9 @@ func (r *StreamRepository) UpdatePublishStopByStreamId(stream_id string, hls_seg
 func (r *StreamRepository) UpdateStreamToClosed(stream *entities.StreamEntity, opts ...CURDOptionFunc) error {
 	return r.WithTransaction(func(ctx mongo.SessionContext) error {
 		if err := r.UpdateOneById(stream.Id, map[string]interface{}{
-			"is_closed": true,
-			"updatedAt": time.Now().UTC(),
+			"is_closed":     true,
+			"is_publishing": false,
+			"updatedAt":     time.Now().UTC(),
 		}, stream, WithContext(ctx)); err != nil {
 			return err
 		}
