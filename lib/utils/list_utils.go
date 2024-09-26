@@ -93,13 +93,13 @@ func Reduce[K any, V any](list *[]K, f func(a V, b K) V, inititalValue V) V {
 	return inititalValue
 }
 
-func KeyBy[K any](list *[]K, f func(a K) string) map[string]K {
+func KeyBy[K any](list *[]K, f func(a K) string) *map[string]K {
 	result := make(map[string]K)
 	for _, e := range *list {
 		key := f(e)
 		result[fmt.Sprintf("%v", key)] = e
 	}
-	return result
+	return &result
 }
 
 func Shift[K any](list *[]K) K {

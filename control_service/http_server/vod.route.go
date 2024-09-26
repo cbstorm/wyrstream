@@ -97,7 +97,7 @@ var _ = GetHttpServer().FeedRoute(&HTTPRoute{
 	Method:   DELETE,
 	Endpoint: "/vods/:id",
 	Handlers: []func(*fiber.Ctx) error{
-		middlewares.AuthRole(enums.AUTH_ROLE_ADMIN),
+		middlewares.AuthRole(enums.AUTH_ROLE_USER),
 		func(c *fiber.Ctx) error {
 			req_ctx := common.GetRequestContext(c)
 			input, err := dtos.NewDeleteOneInput().SetId(c.Params("id"))

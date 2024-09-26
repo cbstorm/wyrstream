@@ -48,6 +48,26 @@ func (h *StreamsHelper) ResolveStreamLogs() error {
 	return nil
 }
 
+func (h *StreamsHelper) ResolvePublisher() error {
+	if len(*h.streams) == 0 {
+		return nil
+	}
+	publisher_ids := utils.Map(h.streams, func(e *entities.StreamEntity, i int) primitive.ObjectID {
+		return e.PublisherId
+	})
+	publishers := make([]*entities.UserEntity, 0)
+	if err := repositories.GetUserRepository().FindManyByIds(*publisher_ids, &publishers); err != nil {
+		return err
+	}
+	publishers_key_by_id := utils.KeyBy(&publishers, func(a *entities.UserEntity) string {
+		return a.Id.Hex()
+	})
+	for _, v := range *h.streams {
+		v.Publisher = (*publishers_key_by_id)[v.PublisherId.Hex()]
+	}
+	return nil
+}
+
 func (h *StreamsHelper) ListStorageDirs() {
 	dir_prefixs := utils.Map(h.streams, func(a *entities.StreamEntity, b int) string {
 		return fmt.Sprintf("streams/%s/segments/", a.StreamId)

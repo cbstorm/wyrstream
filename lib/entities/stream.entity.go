@@ -32,6 +32,7 @@ type StreamEntity struct {
 
 	PublishStreamUrl string              `bson:"-" json:"stream_url"`
 	StreamLogs       *[]*StreamLogEntity `bson:"-" json:"stream_logs"`
+	Publisher        *UserEntity         `bson:"-" json:"publisher"`
 	ShownPublishKey  string              `bson:"-" json:"shown_publish_key"`
 }
 

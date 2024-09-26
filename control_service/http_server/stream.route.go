@@ -14,6 +14,7 @@ var _ = GetHttpServer().FeedRoute(&HTTPRoute{
 	Method:   GET,
 	Endpoint: "/streams",
 	Handlers: []func(*fiber.Ctx) error{
+		middlewares.LoggingMiddleware,
 		func(c *fiber.Ctx) error {
 			req_ctx := common.GetRequestContext(c)
 			fetchArgs := dtos.NewFetchArgs()

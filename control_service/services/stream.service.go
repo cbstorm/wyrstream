@@ -54,6 +54,11 @@ func (svc *StreamService) FetchStreams(fetchArgs *dtos.FetchArgs, reqCtx *common
 			return nil, err
 		}
 	}
+	if fetchArgs.IsIncludes("publisher") {
+		if err := helper.ResolvePublisher(); err != nil {
+			return nil, err
+		}
+	}
 	if reqCtx.PathIncludes("my_streams") {
 		for _, v := range streams {
 			v.MakeShownPublishKey().MakePublishStreamUrl()

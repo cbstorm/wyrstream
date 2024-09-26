@@ -72,5 +72,15 @@ func (svc *VodService) UpdateOneVod(input *dtos.UpdateOneVodInput, reqCtx *commo
 
 func (svc *VodService) DeleteOneVod(input *dtos.DeleteOneInput, reqCtx *common.RequestContext) (*entities.VodEntity, error) {
 	vod := entities.NewVodEntity()
+	err, is_not_found := svc.vod_repository.DeleteOne(map[string]interface{}{
+		"_id":      input.Id,
+		"owner_id": reqCtx.GetObjId(),
+	}, vod)
+	if err != nil {
+		return nil, err
+	}
+	if is_not_found {
+		return nil, exceptions.Err_RESOURCE_NOT_FOUND().SetMessage("vod not found")
+	}
 	return vod, nil
 }
