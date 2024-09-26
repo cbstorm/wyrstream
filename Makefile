@@ -141,22 +141,27 @@ test-hls:
 test-thumbnail:
 	ffmpeg -v error -i hls_service/public/STR66EC7A661/seg-00004.ts -q:v 1 -frames:v 1 -y tmp/STR66EC7A942.jpg
 
-docker-build: docker-build-stream-svc docker-build-auth-svc docker-build-hls-svc docker-build-control-svc
+docker-build: docker-build-stream-svc docker-build-auth-svc docker-build-hls-svc docker-build-control-svc docker-build-alert-svc
 docker-build-stream-svc:
 	docker rmi -f $(BASE_DOCKER_REGISTRY)stream_service:latest || true
 	docker build --progress=plain --no-cache -t $(BASE_DOCKER_REGISTRY)stream_service:latest -f stream_service.Dockerfile .
+	docker push $(BASE_DOCKER_REGISTRY)stream_service:latest
 docker-build-auth-svc:
 	docker rmi -f $(BASE_DOCKER_REGISTRY)auth_service:latest || true
 	docker build --progress=plain --no-cache -t $(BASE_DOCKER_REGISTRY)auth_service:latest -f auth_service.Dockerfile .
+	docker push $(BASE_DOCKER_REGISTRY)auth_service:latest
 docker-build-hls-svc:
 	docker rmi -f $(BASE_DOCKER_REGISTRY)hls_service:latest || true
 	docker build --progress=plain --no-cache -t $(BASE_DOCKER_REGISTRY)hls_service:latest -f hls_service.Dockerfile .
+	docker push $(BASE_DOCKER_REGISTRY)hls_service:latest
 docker-build-control-svc:
 	docker rmi -f $(BASE_DOCKER_REGISTRY)control_service:latest || true
 	docker build --progress=plain --no-cache -t $(BASE_DOCKER_REGISTRY)control_service:latest -f control_service.Dockerfile .
+	docker push $(BASE_DOCKER_REGISTRY)control_service:latest
 docker-build-alert-svc:
 	docker rmi -f $(BASE_DOCKER_REGISTRY)alert_service:latest || true
 	docker build --progress=plain --no-cache -t $(BASE_DOCKER_REGISTRY)alert_service:latest -f alert_service.Dockerfile .
+	docker push $(BASE_DOCKER_REGISTRY)alert_service:latest
 docker-ffmpeg-srt:
 	docker rmi -f cbstorm/ffmpeg-srt:latest || true
 	docker build --progress=plain --no-cache -t cbstorm/ffmpeg-srt:latest -f ffmpeg-srt.Dockerfile .

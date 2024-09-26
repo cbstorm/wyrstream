@@ -1,0 +1,138 @@
+name: Docker build
+on:
+  push:
+    branches:
+      - master
+jobs:
+  build:
+    strategy:
+      matrix:
+        go-version: [1.23.x]
+        platform: [ubuntu-latest]
+    
+    runs-on: ${{ matrix.platform }}
+    
+    steps:
+    - name: Install Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ${{ matrix.go-version }}
+
+    - name: Checkout code
+      uses: actions/checkout@v2
+    
+    - name: Login Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
+
+    - name: Setup Docker Buildx
+      uses: docker/setup-buildx-action@v2
+      id: buildx
+
+    - name: Cache Docker Image Layers
+      uses: actions/cache@v2
+      with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+              ${{ runner.os }}-buildx-
+
+    - name: Pull and retag old stream_service image
+      run: | 
+        NEW_DATE=$(date +%d%m%Y%H%M)
+        docker pull ${{ secrets.DOCKER_USERNAME }}/wyrstream_stream_service:latest
+        docker tag ${{ secrets.DOCKER_USERNAME }}/wyrstream_stream_service:latest ${{ secrets.DOCKER_USERNAME }}/wyrstream_stream_service:$NEW_DATE
+        docker push ${{ secrets.DOCKER_USERNAME }}/wyrstream_stream_service:$NEW_DATE
+        echo "Pushed image $(${{ secrets.DOCKER_USERNAME }}/wyrstream_stream_service:$NEW_DATE)"
+    - name: Build and Push stream_service image
+      uses: docker/build-push-action@v2
+      id: docker_build
+      with:
+          context: ./
+          file: ./stream_service.Dockerfile
+          builder: ${{ steps.buildx.outputs.name }}
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/wyrstream_stream_service:latest
+          cache-from: type=local,src=/tmp/.buildx-cache/wyrstream_stream_service
+          cache-to: type=local,dest=/tmp/.buildx-cache/wyrstream_stream_service
+
+    - name: Pull and retag old control_service image
+      run: | 
+        NEW_DATE=$(date +%d%m%Y%H%M)
+        docker pull ${{ secrets.DOCKER_USERNAME }}/wyrstream_control_service:latest
+        docker tag ${{ secrets.DOCKER_USERNAME }}/wyrstream_control_service:latest ${{ secrets.DOCKER_USERNAME }}/wyrstream_control_service:$NEW_DATE
+        docker push ${{ secrets.DOCKER_USERNAME }}/wyrstream_control_service:$NEW_DATE
+        echo "Pushed image $(${{ secrets.DOCKER_USERNAME }}/wyrstream_control_service:$NEW_DATE)"
+    - name: Build and Push control_service image
+      uses: docker/build-push-action@v2
+      id: docker_build
+      with:
+          context: ./
+          file: ./control_service.Dockerfile
+          builder: ${{ steps.buildx.outputs.name }}
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/wyrstream_control_service:latest
+          cache-from: type=local,src=/tmp/.buildx-cache/wyrstream_control_service
+          cache-to: type=local,dest=/tmp/.buildx-cache/wyrstream_control_service
+
+    - name: Pull and retag old auth_service image
+      run: | 
+        NEW_DATE=$(date +%d%m%Y%H%M)
+        docker pull ${{ secrets.DOCKER_USERNAME }}/wyrstream_auth_service:latest
+        docker tag ${{ secrets.DOCKER_USERNAME }}/wyrstream_auth_service:latest ${{ secrets.DOCKER_USERNAME }}/wyrstream_auth_service:$NEW_DATE
+        docker push ${{ secrets.DOCKER_USERNAME }}/wyrstream_auth_service:$NEW_DATE
+        echo "Pushed image $(${{ secrets.DOCKER_USERNAME }}/wyrstream_auth_service:$NEW_DATE)"
+    - name: Build and Push auth_service image
+      uses: docker/build-push-action@v2
+      id: docker_build
+      with:
+          context: ./
+          file: ./auth_service.Dockerfile
+          builder: ${{ steps.buildx.outputs.name }}
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/wyrstream_auth_service:latest
+          cache-from: type=local,src=/tmp/.buildx-cache/wyrstream_auth_service
+          cache-to: type=local,dest=/tmp/.buildx-cache/wyrstream_auth_service
+
+    - name: Pull and retag old hls_service image
+      run: | 
+        NEW_DATE=$(date +%d%m%Y%H%M)
+        docker pull ${{ secrets.DOCKER_USERNAME }}/wyrstream_hls_service:latest
+        docker tag ${{ secrets.DOCKER_USERNAME }}/wyrstream_hls_service:latest ${{ secrets.DOCKER_USERNAME }}/wyrstream_hls_service:$NEW_DATE
+        docker push ${{ secrets.DOCKER_USERNAME }}/wyrstream_hls_service:$NEW_DATE
+        echo "Pushed image $(${{ secrets.DOCKER_USERNAME }}/wyrstream_hls_service:$NEW_DATE)"
+    - name: Build and Push hls_service image
+      uses: docker/build-push-action@v2
+      id: docker_build
+      with:
+          context: ./
+          file: ./hls_service.Dockerfile
+          builder: ${{ steps.buildx.outputs.name }}
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/wyrstream_hls_service:latest
+          cache-from: type=local,src=/tmp/.buildx-cache/wyrstream_hls_service
+          cache-to: type=local,dest=/tmp/.buildx-cache/wyrstream_hls_service
+
+    - name: Pull and retag old alert_service image
+      run: | 
+        NEW_DATE=$(date +%d%m%Y%H%M)
+        docker pull ${{ secrets.DOCKER_USERNAME }}/wyrstream_alert_service:latest
+        docker tag ${{ secrets.DOCKER_USERNAME }}/wyrstream_alert_service:latest ${{ secrets.DOCKER_USERNAME }}/wyrstream_alert_service:$NEW_DATE
+        docker push ${{ secrets.DOCKER_USERNAME }}/wyrstream_alert_service:$NEW_DATE
+        echo "Pushed image $(${{ secrets.DOCKER_USERNAME }}/wyrstream_alert_service:$NEW_DATE)"
+    - name: Build and Push alert_service image
+      uses: docker/build-push-action@v2
+      id: docker_build
+      with:
+          context: ./
+          file: ./alert_service.Dockerfile
+          builder: ${{ steps.buildx.outputs.name }}
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/wyrstream_alert_service:latest
+          cache-from: type=local,src=/tmp/.buildx-cache/wyrstream_alert_service
+          cache-to: type=local,dest=/tmp/.buildx-cache/wyrstream_alert_service
+
+    - name: Verify
+      run: echo ${{ steps.docker_build.outputs.digest }}
