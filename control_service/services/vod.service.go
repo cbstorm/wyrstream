@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/cbstorm/wyrstream/control_service/common"
+	"github.com/cbstorm/wyrstream/control_service/helpers"
 	"github.com/cbstorm/wyrstream/lib/dtos"
 	"github.com/cbstorm/wyrstream/lib/entities"
 	"github.com/cbstorm/wyrstream/lib/exceptions"
@@ -34,7 +35,17 @@ func NewVodService() *VodService {
 
 func (svc *VodService) FetchVods(fetchArgs *dtos.FetchArgs, reqCtx *common.RequestContext) (*repositories.FetchOutput[*entities.VodEntity], error) {
 	vods := make([]*entities.VodEntity, 0)
-	return svc.vod_repository.Fetch(fetchArgs, &vods)
+	res, err := svc.vod_repository.Fetch(fetchArgs, &vods)
+	if err != nil {
+		return nil, err
+	}
+	helper := helpers.NewVODsHelper(res.Result)
+	if fetchArgs.IsIncludes("owner") {
+		if err := helper.ResolveOwner(); err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
 }
 
 func (svc *VodService) GetOneVod(input *dtos.GetOneInput, reqCtx *common.RequestContext) (*entities.VodEntity, error) {
