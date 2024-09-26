@@ -7,16 +7,11 @@ import (
 )
 
 var Alert HttpMiddleware = func(c *fiber.Ctx) error {
-	reqCtx := AssertRequestContext(c)
 	p := &dtos.AlertPayload{
 		Method:  c.Method(),
 		Url:     c.OriginalURL(),
 		Payload: string(c.BodyRaw()),
 	}
-	go func() {
-		if err := alert_service.GetAlertService().AlertFromMiddleware(p); err != nil {
-			reqCtx.GetLogger().Error("Could not send alert with err: %v", err)
-		}
-	}()
+	alert_service.GetAlertService().Alert(p)
 	return c.Next()
 }

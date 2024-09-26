@@ -3,7 +3,7 @@ package alert_service
 import (
 	"sync"
 
-	"github.com/cbstorm/wyrstream/lib/dtos"
+	"github.com/cbstorm/wyrstream/lib/logger"
 	"github.com/cbstorm/wyrstream/lib/nats_service"
 )
 
@@ -21,17 +21,20 @@ func GetAlertService() *AlertService {
 
 type AlertService struct {
 	nats_service *nats_service.NATS_Service
+	logg         *logger.Logger
 }
 
 func NewAlertService() *AlertService {
 	return &AlertService{
 		nats_service: nats_service.GetNATSService(),
+		logg:         logger.NewLogger("ALERT_SERVICE"),
 	}
 }
 
-func (svc *AlertService) AlertFromMiddleware(payload *dtos.AlertPayload) error {
-	if _, err := svc.nats_service.Request(nats_service.ALERT, payload); err != nil {
-		return err
-	}
-	return nil
+func (svc *AlertService) Alert(payload interface{}) {
+	go func() {
+		if _, err := svc.nats_service.Request(nats_service.ALERT, payload); err != nil {
+			svc.logg.Error("Could not send alert with payload %v due to an error: %v", payload, err)
+		}
+	}()
 }

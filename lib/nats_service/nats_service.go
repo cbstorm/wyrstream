@@ -146,6 +146,11 @@ func WithOutput(o interface{}) RequestOptFunc {
 }
 
 func (ns *NATS_Service) Request(subj NATS_Subject, data interface{}, opts ...RequestOptFunc) (interface{}, error) {
+	defer func() {
+		if r := recover(); r != nil {
+			logger.UnexpectedErrLogger.Error("error occured %v", r)
+		}
+	}()
 	var bytes_data []byte
 	switch v := data.(type) {
 	case []byte:

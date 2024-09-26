@@ -117,3 +117,10 @@ func (h *StreamsHelper) GenerateHLSPlaylist(stream *entities.StreamEntity) (stri
 	}
 	return f_path, nil
 }
+
+func (h *StreamsHelper) CleanHLSPlaylist(stream *entities.StreamEntity) {
+	f_path := fmt.Sprintf("tmp/%s", stream.StreamId)
+	if err := os.RemoveAll(f_path); err != nil {
+		logger.UnexpectedErrLogger.Error("Could not clean HLS playlist dir of stream %s due to an error: %v", stream.StreamId, err)
+	}
+}
