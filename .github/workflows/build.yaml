@@ -48,7 +48,7 @@ jobs:
         echo "Pushed image $(${{ secrets.DOCKER_USERNAME }}/wyrstream_stream_service:$NEW_DATE)"
     - name: Build and Push stream_service image
       uses: docker/build-push-action@v2
-      id: docker_build
+      id: docker_build_stream_service
       with:
           context: ./
           file: ./stream_service.Dockerfile
@@ -67,7 +67,7 @@ jobs:
         echo "Pushed image $(${{ secrets.DOCKER_USERNAME }}/wyrstream_control_service:$NEW_DATE)"
     - name: Build and Push control_service image
       uses: docker/build-push-action@v2
-      id: docker_build
+      id: docker_build_control_service
       with:
           context: ./
           file: ./control_service.Dockerfile
@@ -86,7 +86,7 @@ jobs:
         echo "Pushed image $(${{ secrets.DOCKER_USERNAME }}/wyrstream_auth_service:$NEW_DATE)"
     - name: Build and Push auth_service image
       uses: docker/build-push-action@v2
-      id: docker_build
+      id: docker_build_auth_service
       with:
           context: ./
           file: ./auth_service.Dockerfile
@@ -105,7 +105,7 @@ jobs:
         echo "Pushed image $(${{ secrets.DOCKER_USERNAME }}/wyrstream_hls_service:$NEW_DATE)"
     - name: Build and Push hls_service image
       uses: docker/build-push-action@v2
-      id: docker_build
+      id: docker_build_hls_service
       with:
           context: ./
           file: ./hls_service.Dockerfile
@@ -124,7 +124,7 @@ jobs:
         echo "Pushed image $(${{ secrets.DOCKER_USERNAME }}/wyrstream_alert_service:$NEW_DATE)"
     - name: Build and Push alert_service image
       uses: docker/build-push-action@v2
-      id: docker_build
+      id: docker_build_alert_service
       with:
           context: ./
           file: ./alert_service.Dockerfile
