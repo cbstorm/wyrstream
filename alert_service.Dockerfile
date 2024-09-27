@@ -12,9 +12,9 @@ FROM node:22.9
 
 RUN mkdir -p /alert_service
 
-WORKDIR /
+WORKDIR /alert_service
 
 COPY --from=build /alert_service/ /alert_service/
-RUN cd /alert_service && npm install --save --omit=dev
+RUN npm install --save --omit=dev
 
-CMD ["cd", "/alert_service", "&&", "node", "/.out/main.js"]
+CMD ["node", ".out/main.js"]
