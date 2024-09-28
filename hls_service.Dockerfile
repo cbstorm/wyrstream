@@ -7,7 +7,7 @@ RUN go work sync
 RUN go mod download
 RUN go build -v -o /wyrstream/bin/hls_service ./hls_service
 
-FROM cbstorm/ffmpeg-srt:latest
+FROM linuxserver/ffmpeg:latest
 WORKDIR /
 RUN apt-get update
 RUN apt-get install -y ca-certificates

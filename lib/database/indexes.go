@@ -56,5 +56,19 @@ func (d *Database) CreateIndexes() error {
 	}); err != nil {
 		return err
 	}
+	if err := d.CreateIndex(&Index{
+		CollectionName: "vods",
+		Name:           "owner_id_1",
+		Fields:         bson.D{{Key: "owner_id", Value: 1}},
+	}); err != nil {
+		return err
+	}
+	if err := d.CreateIndex(&Index{
+		CollectionName: "vods",
+		Name:           "title_desc_text",
+		Fields:         bson.D{{Key: "title", Value: "text"}, {Key: "description", Value: "text"}},
+	}); err != nil {
+		return err
+	}
 	return nil
 }
