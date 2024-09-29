@@ -3,12 +3,17 @@ package dtos
 import (
 	"time"
 
+	"github.com/cbstorm/wyrstream/lib/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type UserLoginInput struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required"`
+}
+
+func (i *UserLoginInput) Validate() error {
+	return utils.NewValidator(i).Validate()
 }
 
 type UserLoginResponse struct {
@@ -22,9 +27,13 @@ type UserLoginResponse struct {
 }
 
 type UserCreateAccountInput struct {
-	Name     string `json:"name"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Name     string `json:"name" validate:"required,min_length=6,max_length=30"`
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min_length=8"`
+}
+
+func (i *UserCreateAccountInput) Validate() error {
+	return utils.NewValidator(i).Validate()
 }
 
 type UserCreateAccountReponse struct {
@@ -40,8 +49,12 @@ type UserGetMeInput struct {
 }
 
 type UserRefreshTokenInput struct {
-	AccesssToken string `json:"access_token,omitempty"`
-	RefreshToken string `json:"refresh_token,omitempty"`
+	AccesssToken string `json:"access_token,omitempty" validate:"required"`
+	RefreshToken string `json:"refresh_token,omitempty" validate:"required"`
+}
+
+func (i *UserRefreshTokenInput) Validate() error {
+	return utils.NewValidator(i).Validate()
 }
 
 type UserRefreshTokenOutput struct {

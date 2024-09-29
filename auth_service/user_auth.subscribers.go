@@ -10,12 +10,18 @@ var _ = nats_service.GetNATSService().AddSubcriber(nats_service.NewSubscriber("a
 	if err := m.JSONParse(input); err != nil {
 		return nil, err
 	}
+	if err := input.Validate(); err != nil {
+		return nil, err
+	}
 	return GetAuthService().UserLogin(input)
 }))
 
 var _ = nats_service.GetNATSService().AddSubcriber(nats_service.NewSubscriber("auth.user.create_account", func(m nats_service.IRequestMessage) (interface{}, error) {
 	input := &dtos.UserCreateAccountInput{}
 	if err := m.JSONParse(input); err != nil {
+		return nil, err
+	}
+	if err := input.Validate(); err != nil {
 		return nil, err
 	}
 	return GetAuthService().UserCreateAccount(input)
@@ -32,6 +38,9 @@ var _ = nats_service.GetNATSService().AddSubcriber(nats_service.NewSubscriber("a
 var _ = nats_service.GetNATSService().AddSubcriber(nats_service.NewSubscriber("auth.user.refresh_token", func(m nats_service.IRequestMessage) (interface{}, error) {
 	input := &dtos.UserRefreshTokenInput{}
 	if err := m.JSONParse(input); err != nil {
+		return nil, err
+	}
+	if err := input.Validate(); err != nil {
 		return nil, err
 	}
 	return GetAuthService().UserRefreshToken(input)
