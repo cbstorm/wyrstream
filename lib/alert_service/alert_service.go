@@ -3,6 +3,7 @@ package alert_service
 import (
 	"sync"
 
+	"github.com/cbstorm/wyrstream/lib/dtos"
 	"github.com/cbstorm/wyrstream/lib/logger"
 	"github.com/cbstorm/wyrstream/lib/nats_service"
 )
@@ -37,4 +38,8 @@ func (svc *AlertService) Alert(payload interface{}) {
 			svc.logg.Error("Could not send alert with payload %v due to an error: %v", payload, err)
 		}
 	}()
+}
+
+func (svc *AlertService) StreamStopAlert(payload *dtos.StreamStopAlert) {
+	svc.Alert(payload)
 }

@@ -5,6 +5,7 @@ import (
 	"os"
 	"sync"
 
+	"github.com/cbstorm/wyrstream/lib/alert_service"
 	"github.com/cbstorm/wyrstream/lib/dtos"
 	"github.com/cbstorm/wyrstream/lib/entities"
 	"github.com/cbstorm/wyrstream/lib/logger"
@@ -89,6 +90,7 @@ func (s *HLSService) ProcessStop(input *dtos.HLSPublishStopInput) error {
 		logg.Error("Could not clean the directory due to an error: %v", err)
 		return err
 	}
+	go alert_service.GetAlertService().Alert(&dtos.StreamStopAlert{StreamId: stream.StreamId, Title: stream.Title})
 	return nil
 }
 
