@@ -48,7 +48,7 @@ func NewStreamService() *StreamService {
 func (svc *StreamService) FetchStreams(fetchArgs *dtos.FetchArgs, reqCtx *common.RequestContext) (*repositories.FetchOutput[*entities.StreamEntity], error) {
 	streams := make([]*entities.StreamEntity, 0)
 	res, err := svc.stream_repository.Fetch(fetchArgs, &streams)
-	helper := helpers.NewStreamsHelper(res.Result)
+	helper := helpers.NewStreamsHelper(*res.Result)
 	if fetchArgs.IsIncludes("stream_logs") {
 		if err := helper.ResolveStreamLogs(); err != nil {
 			return nil, err
@@ -109,7 +109,7 @@ func (svc *StreamService) ConvertVODStream(input *dtos.ConvertVODStreamInput, re
 	if is_not_found {
 		return exceptions.Err_RESOURCE_NOT_FOUND().SetMessage("stream not found")
 	}
-	streams_helper := helpers.NewStreamsHelper(&[]*entities.StreamEntity{stream})
+	streams_helper := helpers.NewStreamsHelper([]*entities.StreamEntity{stream})
 	streams_helper.ListStorageDirs()
 	// upload new hls playlist file
 	hls_playlist_path, err := streams_helper.GenerateHLSPlaylist(stream)
@@ -201,7 +201,7 @@ func (svc *StreamService) selectStreamServer() (string, error) {
 	}
 	min := 0
 	min_idx := 0
-	utils.ForEach(&server_health, func(a string, b int) {
+	utils.ForEach(server_health, func(a string, b int) {
 		a_int, _ := strconv.ParseInt(a, 10, 32)
 		log.Printf("idx:%d, a: %d, min: %d, s: %s", b, int(a_int), min, server_keys[b])
 		if int(a_int) <= min {

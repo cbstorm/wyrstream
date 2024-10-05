@@ -39,7 +39,7 @@ func (svc *VodService) FetchVods(fetchArgs *dtos.FetchArgs, reqCtx *common.Reque
 	if err != nil {
 		return nil, err
 	}
-	helper := helpers.NewVODsHelper(res.Result)
+	helper := helpers.NewVODsHelper(*res.Result)
 	if fetchArgs.IsIncludes("owner") {
 		if err := helper.ResolveOwner(); err != nil {
 			return nil, err

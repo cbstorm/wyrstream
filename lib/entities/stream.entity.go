@@ -30,10 +30,10 @@ type StreamEntity struct {
 	IsPublishing bool `bson:"is_publishing" json:"is_publishing"`
 	IsClosed     bool `bson:"is_closed" json:"is_closed"`
 
-	PublishStreamUrl string              `bson:"-" json:"stream_url"`
-	StreamLogs       *[]*StreamLogEntity `bson:"-" json:"stream_logs"`
-	Publisher        *UserEntity         `bson:"-" json:"publisher"`
-	ShownPublishKey  string              `bson:"-" json:"shown_publish_key"`
+	PublishStreamUrl string             `bson:"-" json:"stream_url"`
+	StreamLogs       []*StreamLogEntity `bson:"-" json:"stream_logs"`
+	Publisher        *UserEntity        `bson:"-" json:"publisher"`
+	ShownPublishKey  string             `bson:"-" json:"shown_publish_key"`
 }
 
 func NewStreamEntity() *StreamEntity {

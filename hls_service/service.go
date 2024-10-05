@@ -64,7 +64,7 @@ func (s *HLSService) ProcessStop(input *dtos.HLSPublishStopInput) error {
 		thumbnail_cmd.Cancel()
 		GetProcessThumbnailCommandStore().Remove(input.StreamId)
 	}
-	hls_segment_count := uint(len(*GetListSegmentFilesByStreamId(input.StreamId)))
+	hls_segment_count := uint(len(GetListSegmentFilesByStreamId(input.StreamId)))
 	stream := entities.NewStreamEntity()
 	if err := s.stream_repository.UpdatePublishStopByStreamId(input.StreamId, hls_segment_count, stream); err != nil {
 		return err
@@ -96,7 +96,7 @@ func (s *HLSService) ProcessStop(input *dtos.HLSPublishStopInput) error {
 
 func (s *HLSService) putSegmentsToStorage(stream_id string) error {
 	segments := GetListSegmentFilesByStreamId(stream_id)
-	if len(*segments) == 0 {
+	if len(segments) == 0 {
 		return fmt.Errorf("hls segments is empty")
 	}
 	seg_objs := utils.Map(segments, func(a string, b int) minio_service.MinIOFObject {

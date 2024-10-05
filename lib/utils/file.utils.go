@@ -26,7 +26,7 @@ func AssertDir(file_path string) error {
 	return nil
 }
 
-func ListDirWithFilter(dir string, filter func(f_name string) bool) (*[]string, error) {
+func ListDirWithFilter(dir string, filter func(f_name string) bool) ([]string, error) {
 	out := make([]string, 0)
 	files, err := os.ReadDir(dir)
 	if err != nil {
@@ -37,5 +37,5 @@ func ListDirWithFilter(dir string, filter func(f_name string) bool) (*[]string, 
 			out = append(out, v.Name())
 		}
 	}
-	return &out, nil
+	return out, nil
 }

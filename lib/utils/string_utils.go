@@ -26,9 +26,9 @@ func StringLength(text string) int {
 	return utf8.RuneCountInString(text)
 }
 
-func Uniq(t *[]string) []string {
+func Uniq(t []string) []string {
 	str_map := map[string]int{}
-	for _, v := range *t {
+	for _, v := range t {
 		str_map[v] = 1
 	}
 	out := []string{}
@@ -38,7 +38,7 @@ func Uniq(t *[]string) []string {
 	return out
 }
 
-func UniqObjectId(ids *[]primitive.ObjectID) []primitive.ObjectID {
+func UniqObjectId(ids []primitive.ObjectID) []primitive.ObjectID {
 	hex_ids := Map(ids, func(i primitive.ObjectID, idx int) string {
 		return i.Hex()
 	})

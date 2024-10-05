@@ -46,12 +46,12 @@ func BuildThumbnailUrl(stream_id string) string {
 	return fmt.Sprintf("%s/%s/%s/%s", cfg.HLS_PUBLIC_URL(), stream_id, THUMBNAIL_DIR, THUMBNAIL_FILE)
 }
 
-func GetListSegmentFilesByStreamId(stream_id string) *[]string {
+func GetListSegmentFilesByStreamId(stream_id string) []string {
 	files, err := utils.ListDirWithFilter(BuildHLSStreamDir(stream_id), func(f_name string) bool {
 		return strings.HasPrefix(f_name, SEGMENT_FILE_PREFIX) && strings.HasSuffix(f_name, SEGMENT_FILE_SUFFIX)
 	})
 	if err != nil {
-		return &[]string{}
+		return []string{}
 	}
 	return files
 }

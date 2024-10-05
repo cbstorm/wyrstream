@@ -121,10 +121,10 @@ func (i *RedisService) Get(key RedisKey, out interface{}) (error, bool) {
 func (i *RedisService) MGet(keys []RedisKey, out *[]string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 	defer cancel()
-	k := utils.Map(&keys, func(a RedisKey, b int) string {
+	k := utils.Map(keys, func(a RedisKey, b int) string {
 		return i.GetKey(a).String()
 	})
-	cmd := i.rdb.MGet(ctx, (*k)...)
+	cmd := i.rdb.MGet(ctx, k...)
 	if cmd.Err() != nil {
 		return cmd.Err()
 	}
@@ -132,9 +132,9 @@ func (i *RedisService) MGet(keys []RedisKey, out *[]string) error {
 	if err != nil {
 		return err
 	}
-	*out = *(utils.Map(&result, func(a interface{}, b int) string {
+	*out = utils.Map(result, func(a interface{}, b int) string {
 		return a.(string)
-	}))
+	})
 	return nil
 }
 

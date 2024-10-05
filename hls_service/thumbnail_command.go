@@ -101,10 +101,10 @@ func (c *ProcessThumbnailCommand) Start() {
 
 func (c *ProcessThumbnailCommand) getInput() string {
 	files := GetListSegmentFilesByStreamId(c.stream_id)
-	if len(*files) == 0 {
+	if len(files) == 0 {
 		return ""
 	}
-	s := (*files)[len(*files)-1]
+	s := files[len(files)-1]
 	s = fmt.Sprintf("%s/%s", BuildHLSStreamDir(c.stream_id), s)
 	return s
 }

@@ -120,14 +120,14 @@ func (m *MinIOService) FPutObject(object MinIOFObject, opts ...MinIOOptionFunc) 
 	return fmt.Sprintf("%s/%s/%s", m.config.MINIO_PUBLIC_URL(), result.Bucket, result.Key), nil
 }
 
-func (m *MinIOService) FPutObjects(objects *[]MinIOFObject) *[]*BulkPutObjectResult {
-	number_of_obj := len(*objects)
+func (m *MinIOService) FPutObjects(objects []MinIOFObject) *[]*BulkPutObjectResult {
+	number_of_obj := len(objects)
 	t := time.Duration(30 * number_of_obj)
 	ctx, cancel := context.WithTimeout(context.Background(), t*time.Second)
 	defer cancel()
 	upload_ch := make(chan *BulkPutObjectResult, number_of_obj)
 	defer close(upload_ch)
-	for _, e := range *objects {
+	for _, e := range objects {
 		go func(o MinIOFObject) {
 			a, err := m.FPutObject(o, WithContext(ctx))
 			upload_ch <- &BulkPutObjectResult{ObjectName: o.ObjectName(), PutResult: a, Error: err}
@@ -206,13 +206,13 @@ func (m *MinIOService) ListDir(dir string, opts ...MinIOOptionFunc) (*[]string, 
 	return &result, nil
 }
 
-func (m *MinIOService) ListDirs(dirs *[]string) *map[string]*BulkListDirResult {
-	num_of_dir := len(*dirs)
+func (m *MinIOService) ListDirs(dirs []string) map[string]*BulkListDirResult {
+	num_of_dir := len(dirs)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(30*num_of_dir)*time.Second)
 	defer cancel()
 	list_dir_ch := make(chan *BulkListDirResult, num_of_dir)
 	defer close(list_dir_ch)
-	for _, v := range *dirs {
+	for _, v := range dirs {
 		go func(d string) {
 			r, err := m.ListDir(d, WithContext(ctx))
 			if err != nil {
@@ -227,7 +227,7 @@ func (m *MinIOService) ListDirs(dirs *[]string) *map[string]*BulkListDirResult {
 		r := <-list_dir_ch
 		result[r.Dir] = r
 	}
-	return &result
+	return result
 }
 
 func (m *MinIOService) CancelHealthCheck() {
