@@ -36,9 +36,9 @@ jobs:
     - name: Pull and retag old stream_service image
       run: | 
         NEW_DATE=$(date +%d%m%Y%H%M)
-        docker pull ${{ secrets.DOCKER_USERNAME }}/wyrstream_stream_service:latest
-        docker tag ${{ secrets.DOCKER_USERNAME }}/wyrstream_stream_service:latest ${{ secrets.DOCKER_USERNAME }}/wyrstream_stream_service:$NEW_DATE
-        docker push ${{ secrets.DOCKER_USERNAME }}/wyrstream_stream_service:$NEW_DATE
+        docker pull ${{ secrets.DOCKER_USERNAME }}/wyrstream_stream_service:latest || true
+        docker tag ${{ secrets.DOCKER_USERNAME }}/wyrstream_stream_service:latest ${{ secrets.DOCKER_USERNAME }}/wyrstream_stream_service:$NEW_DATE || true
+        docker push ${{ secrets.DOCKER_USERNAME }}/wyrstream_stream_service:$NEW_DATE || true
         echo "Pushed image $(${{ secrets.DOCKER_USERNAME }}/wyrstream_stream_service:$NEW_DATE)"
     - name: Build and Push stream_service image
       uses: docker/build-push-action@v2

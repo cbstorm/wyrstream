@@ -144,7 +144,7 @@ func (c *ProcessThumbnailCommand) run() error {
 		c.logger.Error("Could not read from stderr with err: %v", err)
 		return err
 	}
-	c.logger.Error(string(stderr_output))
+	c.logger.Error("%s", string(stderr_output))
 	if err := cmd.Wait(); err != nil {
 		c.logger.Error("Could not wait for command complete with err: %v", err)
 		return err
