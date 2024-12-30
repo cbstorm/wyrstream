@@ -8,6 +8,6 @@ import (
 
 var LoggingMiddleware HttpMiddleware = func(c *fiber.Ctx) error {
 	reqCtx := AssertRequestContext(c)
-	reqCtx.GetLogger().Info(fmt.Sprintf("%s %s %v", c.Method(), c.IP(), c.OriginalURL()))
+	reqCtx.GetLogger().Info("%s", fmt.Sprintf("%s %s %v", c.Method(), c.IP(), c.OriginalURL()))
 	return c.Next()
 }
